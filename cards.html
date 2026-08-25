@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bankees – Cards</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/responsive.css" />
+    <style>
+        /* ===== CARD 3D STYLES ===== */
+        .card-scene {
+            perspective: 1200px;
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto 24px;
+            padding: 10px 0;
+            cursor: grab;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .card-scene:active {
+            cursor: grabbing;
+        }
+
+        .card-wrapper {
+            position: relative;
+            width: 100%;
+            padding-bottom: 62.5%;
+            /* 1:1.6 ratio for card */
+            transition: transform 0.1s ease;
+            transform-style: preserve-3d;
+            transform: rotateX(0deg) rotateY(0deg);
+        }
+
+        .card-wrapper.auto-rotate {
+            animation: floatCard 4s ease-in-out infinite;
+        }
+
+        @keyframes floatCard {
+
+            0%,
+            100% {
+                transform: rotateX(4deg) rotateY(-5deg) translateY(0px);
+            }
+
+            50% {
+                transform: rotateX(-2deg) rotateY(5deg) translateY(-8px);
+            }
+        }
+
+        .card-wrapper:hover {
+            animation: none;
+        }
+
+        .card-3d {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 20px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #2d2d44 50%, #1a1a2e 100%);
+            padding: 22px 26px;
+            box-shadow:
+                0 20px 60px rgba(26, 26, 46, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            transform-style: preserve-3d;
+            transition: box-shadow 0.3s ease;
+        }
+
+        .card-3d::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(ellipse at 30% 20%, rgba(255, 255, 255, 0.05) 0%, transparent 60%);
+            pointer-events: none;
+            border-radius: 20px;
+        }
+
+        .card-3d:hover {
+            box-shadow:
+                0 30px 80px rgba(26, 26, 46, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        }
+
+        /* Card shine effect */
+        .card-3d::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 200%;
+            height: 100%;
+            background: linear-gradient(90deg,
+                    transparent 0%,
+                    rgba(255, 255, 255, 0.03) 40%,
+                    rgba(255, 255, 255, 0.06) 50%,
+                    rgba(255, 255, 255, 0.03) 60%,
+                    transparent 100%);
+            transform: rotate(25deg);
+            pointer-events: none;
+            animation: shineMove 8s ease-in-out infinite;
+        }
+
+        @keyframes shineMove {
+
+            0%,
+            100% {
+                transform: rotate(25deg) translateX(-100%);
+            }
+
+            50% {
+                transform: rotate(25deg) translateX(100%);
+            }
+        }
+
+        /* Top section: Bankees + All Banks */
+        .card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            position: relative;
+            z-index: 1;
+        }
+
+        .card-brand {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-brand-icon {
+            width: 28px;
+            height: 28px;
+            background: #e67e22;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+            color: #fff;
+        }
+
+        .card-brand-name {
+            font-weight: 700;
+            font-size: 16px;
+            letter-spacing: 1px;
+        }
+
+        .card-brand-name .highlight {
+            color: #e67e22;
+        }
+
+        .card-brand-sub {
+            font-size: 7px;
+            letter-spacing: 2px;
+            opacity: 0.6;
+            font-weight: 600;
+            margin-top: 1px;
+        }
+
+        .card-chip {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 2px;
+        }
+
+        .chip-icon {
+            width: 32px;
+            height: 24px;
+            background: linear-gradient(135deg, #f5b74a, #e6a033);
+            border-radius: 4px;
+            position: relative;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .chip-icon::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 16px;
+            height: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 2px;
+        }
+
+        .chip-icon::after {
+            content: '';
+            position: absolute;
+            top: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 14px;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 1px;
+        }
+
+        .card-network {
+            font-size: 8px;
+            letter-spacing: 1px;
+            opacity: 0.5;
+            font-weight: 600;
+        }
+
+        /* Card number section */
+        .card-number-section {
+            position: relative;
+            z-index: 1;
+            margin: 8px 0;
+        }
+
+        .card-number-label {
+            font-size: 8px;
+            letter-spacing: 2px;
+            opacity: 0.4;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .card-number {
+            font-size: 22px;
+            letter-spacing: 4px;
+            font-weight: 600;
+            font-family: 'Courier New', monospace;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Card middle - All Major Banks */
+        .card-banks {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin: 2px 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        .bank-badge {
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 7px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .bank-badge.orange {
+            background: rgba(230, 126, 34, 0.2);
+            border-color: rgba(230, 126, 34, 0.2);
+            color: #e67e22;
+        }
+
+        /* Card bottom section */
+        .card-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            position: relative;
+            z-index: 1;
+        }
+
+        .card-holder {
+            flex: 1;
+        }
+
+        .card-holder-label {
+            font-size: 7px;
+            letter-spacing: 2px;
+            opacity: 0.4;
+            font-weight: 600;
+        }
+
+        .card-holder-name {
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            margin-top: 2px;
+            text-transform: uppercase;
+        }
+
+        .card-expiry {
+            text-align: right;
+        }
+
+        .card-expiry-label {
+            font-size: 7px;
+            letter-spacing: 2px;
+            opacity: 0.4;
+            font-weight: 600;
+        }
+
+        .card-expiry-date {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            margin-top: 2px;
+        }
+
+        .card-type-badge {
+            position: absolute;
+            bottom: 22px;
+            right: 26px;
+            font-size: 8px;
+            letter-spacing: 1px;
+            opacity: 0.3;
+            font-weight: 600;
+            z-index: 1;
+        }
+
+        /* Card controls */
+        .card-controls {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin: 4px 0 16px;
+            flex-wrap: wrap;
+        }
+
+        .card-control-btn {
+            padding: 10px 20px;
+            border-radius: 30px;
+            border: none;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-control-btn.primary {
+            background: #1a1a2e;
+            color: #fff;
+        }
+
+        .card-control-btn.primary:hover {
+            background: #2d2d44;
+            transform: scale(1.02);
+        }
+
+        .card-control-btn.secondary {
+            background: #f5f7fa;
+            color: #1a1a2e;
+            border: 1px solid #e0e0e0;
+        }
+
+        .card-control-btn.secondary:hover {
+            background: #e8e8f0;
+        }
+
+        .card-control-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Flip animation */
+        .card-wrapper.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-back {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 20px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #2d2d44 50%, #1a1a2e 100%);
+            padding: 22px 26px;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            transform: rotateY(180deg);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 20px 60px rgba(26, 26, 46, 0.4);
+        }
+
+        .linked-card-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+        }
+
+        .avatar-fnb { background: #005baa; }
+        .avatar-capitec { background: #e31e24; }
+        .avatar-absa { background: #002f6c; }
+        .avatar-nedbank { background: #1a4d8c; }
+
+        .card-back::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(ellipse at 30% 20%, rgba(255, 255, 255, 0.05) 0%, transparent 60%);
+            pointer-events: none;
+            border-radius: 20px;
+        }
+
+        .card-back-strip {
+            width: 100%;
+            height: 30%;
+            background: #0a0a14;
+            margin-top: 10%;
+            position: relative;
+        }
+
+        .card-back-strip::after {
+            content: '';
+            position: absolute;
+            bottom: -20px;
+            left: 0;
+            right: 0;
+            height: 40px;
+            background: linear-gradient(to bottom, #0a0a14, transparent);
+        }
+
+        .card-back-cvv {
+            display: flex;
+            justify-content: flex-end;
+            padding: 12px 0;
+            margin-top: 10px;
+        }
+
+        .card-back-cvv-box {
+            background: #fff;
+            padding: 8px 16px;
+            border-radius: 4px;
+            color: #1a1a2e;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            min-width: 80px;
+            text-align: center;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-back-text {
+            font-size: 9px;
+            opacity: 0.5;
+            line-height: 1.6;
+            max-width: 80%;
+            font-weight: 400;
+        }
+
+        /* Responsive */
+        @media (max-width: 400px) {
+            .card-3d {
+                padding: 16px 20px;
+            }
+
+            .card-number {
+                font-size: 18px;
+                letter-spacing: 3px;
+            }
+
+            .card-brand-name {
+                font-size: 14px;
+            }
+
+            .card-brand-icon {
+                width: 24px;
+                height: 24px;
+                font-size: 12px;
+            }
+
+            .chip-icon {
+                width: 28px;
+                height: 20px;
+            }
+
+            .card-holder-name {
+                font-size: 11px;
+            }
+
+            .card-expiry-date {
+                font-size: 10px;
+            }
+
+            .bank-badge {
+                font-size: 6px;
+                padding: 1px 6px;
+            }
+        }
+
+        @media (min-width: 500px) {
+            .card-3d {
+                padding: 28px 34px;
+                border-radius: 24px;
+            }
+
+            .card-number {
+                font-size: 28px;
+                letter-spacing: 6px;
+            }
+
+            .card-brand-name {
+                font-size: 20px;
+            }
+
+            .card-brand-icon {
+                width: 34px;
+                height: 34px;
+                font-size: 18px;
+            }
+
+            .chip-icon {
+                width: 40px;
+                height: 30px;
+            }
+
+            .card-holder-name {
+                font-size: 16px;
+            }
+
+            .card-scene {
+                max-width: 480px;
+            }
+        }
+
+        /* Dark mode support */
+        html.dark-mode .card-control-btn.secondary {
+            background: #101820;
+            border-color: #3b4d59;
+            color: #edf2f4;
+        }
+
+        html.dark-mode .card-control-btn.secondary:hover {
+            background: #223541;
+        }
+
+        /* Card status badges in list */
+        .card-status-badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .card-status-dot {
+            font-size: 8px;
+            margin-right: 4px;
+        }
+
+        .smartcard-status-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            margin-bottom: 16px;
+        }
+
+        .smartcard-status-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .smartcard-status-name {
+            font-weight: 600;
+            color: #1a1a2e;
+        }
+
+        .smartcard-status-number {
+            font-size: 13px;
+            color: #7b7b8d;
+        }
+
+        .smartcard-status-card .status-metrics {
+            display: flex;
+            gap: 16px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #f5f5f5;
+        }
+
+        .smartcard-status-card .metric-label {
+            font-size: 10px;
+            color: #7b7b8d;
+        }
+
+        .smartcard-status-card .metric-value {
+            font-weight: 600;
+            color: #1a1a2e;
+        }
+
+        .smartcard-status-card .metric-value.available {
+            color: #27ae60;
+        }
+
+        .cards-heading {
+            font-size: 14px;
+            color: #1a1a2e;
+            margin-bottom: 12px;
+        }
+
+        .add-card-btn {
+            margin-top: 16px;
+        }
+
+        .card-back-cvv-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+            width: 100%;
+        }
+
+        .card-back-cvv-row {
+            display: flex;
+            justify-content: flex-end;
+            width: 100%;
+            padding-right: 10px;
+        }
+
+        .card-back-cvv-label {
+            font-size: 9px;
+            opacity: 0.5;
+            margin-right: 8px;
+            font-weight: 600;
+        }
+
+        .card-back-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .card-back-brand {
+            font-size: 8px;
+            opacity: 0.3;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .card-status-badge.active {
+            background: #e8f8f0;
+            color: #27ae60;
+        }
+
+        .card-status-badge.inactive {
+            background: #fde8e8;
+            color: #e74c3c;
+        }
+
+        .card-status-badge.pending {
+            background: #fef3e8;
+            color: #f39c12;
+        }
+
+        .add-card-btn {
+            width: 100%;
+            padding: 14px;
+            border-radius: 16px;
+            border: 2px dashed #ddd;
+            background: #fff;
+            color: #7b7b8d;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .add-card-btn:hover {
+            border-color: #1a1a2e;
+            color: #1a1a2e;
+        }
+
+        .add-card-btn i {
+            margin-right: 8px;
+        }
+
+        .linked-cards-grid {
+            display: grid;
+            gap: 12px;
+        }
+
+        .linked-card-item {
+            background: #fff;
+            padding: 16px;
+            border-radius: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .linked-card-item .left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .linked-card-item .left .bank {
+            font-weight: 600;
+            color: #1a1a2e;
+        }
+
+        .linked-card-item .left .number {
+            font-size: 14px;
+            color: #7b7b8d;
+        }
+
+        .page-title-block {
+            padding: 16px 20px 8px;
+        }
+
+        .page-title-block h2 {
+            font-size: 22px;
+            color: #1a1a2e;
+        }
+
+        .page-title-block p {
+            color: #7b7b8d;
+            font-size: 14px;
+        }
+
+        .content-shell {
+            padding: 0 16px 80px;
+        }
+
+        @media (min-width: 768px) {
+            .linked-cards-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app">
+        <!-- HEADER -->
+        <div class="header">
+            <a class="logo-wrapper" href="dashboard.html" aria-label="Go to dashboard">
+                <div class="logo-icon">B</div>
+                <div>
+                    <div class="logo-text">BANKE<span class="highlight">ASE</span></div>
+                    <div class="logo-tagline">ONE CARD. ALL BANKS.</div>
+                </div>
+            </a>
+            <div class="header-actions">
+                <i class="fas fa-search"></i>
+                <i class="fas fa-bell"></i>
+            </div>
+        </div>
+
+        <!-- PAGE TITLE -->
+        <div class="page-title-block">
+            <h2>Your Cards</h2>
+            <p>Manage your Bankees SmartCard and linked bank cards</p>
+        </div>
+
+        <div class="content-shell">
+
+            <!-- 3D Card -->
+            <div class="card-scene" id="cardScene">
+                <div class="card-wrapper auto-rotate" id="cardWrapper">
+                    <!-- FRONT -->
+                    <div class="card-3d" id="cardFront">
+                        <div class="card-top">
+                            <div class="card-brand">
+                                <div class="card-brand-icon">B</div>
+                                <div>
+                                    <div class="card-brand-name">BANKE<span class="highlight">ASE</span></div>
+                                    <div class="card-brand-sub">ONE CARD. ALL BANKS.</div>
+                                </div>
+                            </div>
+                            <div class="card-chip">
+                                <div class="chip-icon"></div>
+                                <div class="card-network">VISA</div>
+                            </div>
+                        </div>
+
+                        <div class="card-number-section">
+                            <div class="card-number-label">CARD NUMBER</div>
+                            <div class="card-number">5284 7812 3456 7890</div>
+                        </div>
+
+                        <div class="card-banks">
+                            <span class="bank-badge">FNB</span>
+                            <span class="bank-badge">CAPITEC</span>
+                            <span class="bank-badge">ABSA</span>
+                            <span class="bank-badge">NEDBANK</span>
+                            <span class="bank-badge orange">+3</span>
+                        </div>
+
+                        <div class="card-bottom">
+                            <div class="card-holder">
+                                <div class="card-holder-label">CARDHOLDER</div>
+                                <div class="card-holder-name">Sinethemba N.</div>
+                            </div>
+                            <div class="card-expiry">
+                                <div class="card-expiry-label">EXPIRY</div>
+                                <div class="card-expiry-date">12/26</div>
+                            </div>
+                        </div>
+
+                        <div class="card-type-badge">SMARTCARD</div>
+                    </div>
+
+                    <!-- BACK -->
+                    <div class="card-back" id="cardBack">
+                        <div class="card-back-strip"></div>
+                        <div class="card-back-cvv">
+                            <div class="card-back-cvv-wrap">
+                                <div class="card-back-cvv-row">
+                                    <span class="card-back-cvv-label">CVV</span>
+                                    <div class="card-back-cvv-box">***</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-back-footer">
+                            <div class="card-back-text">
+                                This card is issued by Bankees (Pty) Ltd.
+                                Authorized users only. Valid for use at all
+                                major banks in South Africa.
+                            </div>
+                            <div class="card-back-brand">
+                                BANKEASE
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card Controls -->
+            <div class="card-controls">
+                <button class="card-control-btn primary" id="flipCardBtn">
+                    <i class="fas fa-sync-alt"></i> Flip Card
+                </button>
+                <button class="card-control-btn primary" id="rotateToggleBtn">
+                    <i class="fas fa-play"></i> Auto Rotate
+                </button>
+                <button class="card-control-btn secondary" id="resetCardBtn">
+                    <i class="fas fa-undo"></i> Reset
+                </button>
+            </div>
+
+            <!-- Card Status -->
+            <div class="smartcard-status-card">
+                <div class="smartcard-status-header">
+                    <div>
+                        <div class="smartcard-status-name">Bankees SmartCard</div>
+                        <div class="smartcard-status-number">BK245678901234</div>
+                    </div>
+                    <div>
+                        <span class="card-status-badge active"><i class="fas fa-circle card-status-dot"></i> Active</span>
+                    </div>
+                </div>
+                <div class="status-metrics">
+                    <div>
+                        <div class="metric-label">Limit</div>
+                        <div class="metric-value">R50,000</div>
+                    </div>
+                    <div>
+                        <div class="metric-label">Used</div>
+                        <div class="metric-value">R12,560</div>
+                    </div>
+                    <div>
+                        <div class="metric-label">Available</div>
+                        <div class="metric-value available">R37,440</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Linked Cards -->
+            <h4 class="cards-heading">Linked Bank Cards</h4>
+            <div class="linked-cards-grid">
+                <div class="linked-card-item">
+                    <div class="left">
+                        <div class="linked-card-avatar avatar-fnb">
+                            F</div>
+                        <div>
+                            <div class="bank">FNB</div>
+                            <div class="number">•••• 4589</div>
+                        </div>
+                    </div>
+                    <span class="card-status-badge active">Active</span>
+                </div>
+                <div class="linked-card-item">
+                    <div class="left">
+                        <div class="linked-card-avatar avatar-capitec">
+                            C</div>
+                        <div>
+                            <div class="bank">Capitec</div>
+                            <div class="number">•••• 1234</div>
+                        </div>
+                    </div>
+                    <span class="card-status-badge inactive">Inactive</span>
+                </div>
+                <div class="linked-card-item">
+                    <div class="left">
+                        <div class="linked-card-avatar avatar-absa">
+                            A</div>
+                        <div>
+                            <div class="bank">Absa</div>
+                            <div class="number">•••• 7890</div>
+                        </div>
+                    </div>
+                    <span class="card-status-badge pending">Pending</span>
+                </div>
+                <div class="linked-card-item">
+                    <div class="left">
+                        <div class="linked-card-avatar avatar-nedbank">
+                            N</div>
+                        <div>
+                            <div class="bank">Nedbank</div>
+                            <div class="number">•••• 5678</div>
+                        </div>
+                    </div>
+                    <span class="card-status-badge active">Active</span>
+                </div>
+            </div>
+
+            <!-- Add Card Button -->
+            <button class="add-card-btn">
+                <i class="fas fa-plus-circle"></i> Link New Card
+            </button>
+        </div>
+
+        <!-- BOTTOM NAV -->
+        <div class="bottom-nav">
+            <button class="nav-item" data-page="dashboard" onclick="location.href='dashboard.html'"><i
+                    class="fas fa-th"></i> Dashboard</button>
+            <button class="nav-item" data-page="accounts" onclick="location.href='accounts.html'"><i
+                    class="fas fa-wallet"></i> Accounts</button>
+            <button class="nav-item active" data-page="cards"><i class="fas fa-credit-card"></i> Cards</button>
+            <button class="nav-item" data-page="settings" onclick="location.href='settings.html'"><i
+                    class="fas fa-user-cog"></i> Settings</button>
+        </div>
+        <div class="bottom-space"></div>
+    </div>
+
+    <script src="theme.js"></script>
+    <script>
+        // ===== 3D CARD INTERACTION =====
+        (function () {
+            const scene = document.getElementById('cardScene');
+            const wrapper = document.getElementById('cardWrapper');
+            const flipBtn = document.getElementById('flipCardBtn');
+            const rotateToggleBtn = document.getElementById('rotateToggleBtn');
+            const resetBtn = document.getElementById('resetCardBtn');
+
+            let isFlipped = false;
+            let isAutoRotate = true;
+            let isDragging = false;
+            let startX = 0;
+            let startY = 0;
+            let currentRotX = 4;
+            let currentRotY = -5;
+            let velocityX = 0;
+            let velocityY = 0;
+            let animationFrame = null;
+            let inertiaTimeout = null;
+
+            // Auto-rotate state
+            let autoRotateInterval = null;
+
+            function updateCardTransform() {
+                wrapper.style.transform = `rotateX(${currentRotX}deg) rotateY(${currentRotY}deg)`;
+            }
+
+            function startAutoRotate() {
+                if (autoRotateInterval) {
+                    clearInterval(autoRotateInterval);
+                }
+                let angle = 0;
+                autoRotateInterval = setInterval(() => {
+                    if (!isDragging && isAutoRotate && !isFlipped) {
+                        angle += 0.5;
+                        currentRotY = Math.sin(angle * Math.PI / 180) * 8;
+                        currentRotX = Math.cos(angle * Math.PI / 180) * 4 + 2;
+                        updateCardTransform();
+                    }
+                }, 50);
+            }
+
+            function stopAutoRotate() {
+                if (autoRotateInterval) {
+                    clearInterval(autoRotateInterval);
+                    autoRotateInterval = null;
+                }
+            }
+
+            // Mouse/Touch events for 3D rotation
+            function handleStart(e) {
+                const pos = getPos(e);
+                isDragging = true;
+                startX = pos.x;
+                startY = pos.y;
+                wrapper.style.transition = 'none';
+                stopAutoRotate();
+                if (inertiaTimeout) {
+                    clearTimeout(inertiaTimeout);
+                    inertiaTimeout = null;
+                }
+                if (animationFrame) {
+                    cancelAnimationFrame(animationFrame);
+                    animationFrame = null;
+                }
+            }
+
+            function handleMove(e) {
+                if (!isDragging) return;
+                const pos = getPos(e);
+                const deltaX = pos.x - startX;
+                const deltaY = pos.y - startY;
+
+                // Sensitivity
+                const sensitivity = 0.5;
+                currentRotY += deltaX * sensitivity;
+                currentRotX += deltaY * sensitivity;
+
+                // Clamp X rotation
+                currentRotX = Math.max(-30, Math.min(30, currentRotX));
+
+                startX = pos.x;
+                startY = pos.y;
+                updateCardTransform();
+            }
+
+            function handleEnd(e) {
+                if (!isDragging) return;
+                isDragging = false;
+
+                // Add inertia
+                if (inertiaTimeout) {
+                    clearTimeout(inertiaTimeout);
+                }
+
+                // Smooth transition back to auto-rotate if enabled
+                if (isAutoRotate && !isFlipped) {
+                    inertiaTimeout = setTimeout(() => {
+                        wrapper.style.transition = 'transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                        currentRotX = 4;
+                        currentRotY = -5;
+                        updateCardTransform();
+                        setTimeout(() => {
+                            wrapper.style.transition = 'none';
+                            startAutoRotate();
+                        }, 800);
+                    }, 2000);
+                }
+            }
+
+            function getPos(e) {
+                if (e.touches) {
+                    return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+                }
+                return { x: e.clientX, y: e.clientY };
+            }
+
+            // Mouse events
+            scene.addEventListener('mousedown', handleStart);
+            document.addEventListener('mousemove', handleMove);
+            document.addEventListener('mouseup', handleEnd);
+
+            // Touch events
+            scene.addEventListener('touchstart', handleStart, { passive: true });
+            document.addEventListener('touchmove', handleMove, { passive: true });
+            document.addEventListener('touchend', handleEnd, { passive: true });
+
+            // Flip card
+            flipBtn.addEventListener('click', function () {
+                isFlipped = !isFlipped;
+                if (isFlipped) {
+                    wrapper.classList.add('flipped');
+                    wrapper.style.transition = 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+                    stopAutoRotate();
+                    flipBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Flip Back';
+                } else {
+                    wrapper.classList.remove('flipped');
+                    wrapper.style.transition = 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+                    currentRotX = 4;
+                    currentRotY = -5;
+                    updateCardTransform();
+                    flipBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Flip Card';
+                    if (isAutoRotate) {
+                        setTimeout(startAutoRotate, 600);
+                    }
+                }
+            });
+
+            // Toggle auto-rotate
+            rotateToggleBtn.addEventListener('click', function () {
+                isAutoRotate = !isAutoRotate;
+                if (isAutoRotate && !isFlipped) {
+                    wrapper.style.transition = 'none';
+                    currentRotX = 4;
+                    currentRotY = -5;
+                    updateCardTransform();
+                    rotateToggleBtn.innerHTML = '<i class="fas fa-pause"></i> Auto Rotate';
+                    startAutoRotate();
+                } else {
+                    stopAutoRotate();
+                    rotateToggleBtn.innerHTML = '<i class="fas fa-play"></i> Auto Rotate';
+                }
+            });
+
+            // Reset card
+            resetBtn.addEventListener('click', function () {
+                if (isFlipped) {
+                    isFlipped = false;
+                    wrapper.classList.remove('flipped');
+                    flipBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Flip Card';
+                }
+                wrapper.style.transition = 'transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                currentRotX = 4;
+                currentRotY = -5;
+                updateCardTransform();
+                if (isAutoRotate) {
+                    stopAutoRotate();
+                    setTimeout(startAutoRotate, 800);
+                }
+            });
+
+            // Mouse leave - reset
+            scene.addEventListener('mouseleave', function () {
+                if (!isDragging && !isFlipped && isAutoRotate) {
+                    wrapper.style.transition = 'transform 0.6s ease';
+                    currentRotX = 4;
+                    currentRotY = -5;
+                    updateCardTransform();
+                    setTimeout(() => {
+                        wrapper.style.transition = 'none';
+                    }, 600);
+                }
+            });
+
+            // Start auto-rotate
+            startAutoRotate();
+
+            // Cleanup on page unload
+            window.addEventListener('beforeunload', function () {
+                stopAutoRotate();
+                if (inertiaTimeout) {
+                    clearTimeout(inertiaTimeout);
+                }
+                if (animationFrame) {
+                    cancelAnimationFrame(animationFrame);
+                }
+            });
+
+        })();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,16 @@
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+secrets/
+
+# Local application data
+*.db
+*.db-*
+
+# Dependencies and generated files
+node_modules/
+npm-debug.log*
+*.log

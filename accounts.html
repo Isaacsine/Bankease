@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bankees – Accounts</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/responsive.css" />
+    <style>
+        /* Account-specific styles */
+        .account-summary-card {
+            background: linear-gradient(135deg, #1a1a2e, #2d2d44);
+            border-radius: 20px;
+            padding: 20px;
+            color: #fff;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 16px rgba(26, 26, 46, 0.3);
+        }
+
+        .account-summary-card .total-label {
+            font-size: 11px;
+            opacity: 0.7;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .account-summary-card .total-amount {
+            font-size: 32px;
+            font-weight: 700;
+            margin: 4px 0 2px;
+        }
+
+        .account-summary-card .total-sub {
+            font-size: 13px;
+            opacity: 0.7;
+        }
+
+        .account-summary-card .quick-stats {
+            display: flex;
+            gap: 20px;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .account-summary-card .quick-stats .stat .number {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .account-summary-card .quick-stats .stat .label {
+            font-size: 10px;
+            opacity: 0.6;
+            letter-spacing: 0.5px;
+        }
+
+        .account-item-detail {
+            background: #fff;
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .account-item-detail:active {
+            transform: scale(0.98);
+        }
+
+        .account-item-detail .left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .account-item-detail .icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 700;
+            color: #fff;
+            flex-shrink: 0;
+        }
+
+        .account-item-detail .icon.fnb {
+            background: #005baa;
+        }
+
+        .account-item-detail .icon.capitec {
+            background: #e31e24;
+        }
+
+        .account-item-detail .icon.absa {
+            background: #002f6c;
+        }
+
+        .account-item-detail .icon.nedbank {
+            background: #1a4d8c;
+        }
+
+        .account-item-detail .icon.standard {
+            background: #004d3d;
+        }
+
+        .account-item-detail .icon.tyme {
+            background: #00a651;
+        }
+
+        .account-item-detail .icon.zero {
+            background: #7b7b8d;
+        }
+
+        .account-item-detail .info .name {
+            font-weight: 600;
+            color: #1a1a2e;
+            font-size: 16px;
+        }
+
+        .account-item-detail .info .number {
+            font-size: 13px;
+            color: #7b7b8d;
+        }
+
+        .account-item-detail .info .type {
+            font-size: 12px;
+            color: #7b7b8d;
+            background: #f5f7fa;
+            padding: 2px 10px;
+            border-radius: 10px;
+            display: inline-block;
+            margin-top: 2px;
+        }
+
+        .account-item-detail .right {
+            text-align: right;
+        }
+
+        .account-item-detail .right .balance {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+
+        .account-item-detail .right .status {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 10px;
+            border-radius: 10px;
+            display: inline-block;
+            margin-top: 2px;
+        }
+
+        .account-item-detail .right .status.active {
+            background: #e8f8f0;
+            color: #27ae60;
+        }
+
+        .account-item-detail .right .status.inactive {
+            background: #fde8e8;
+            color: #e74c3c;
+        }
+
+        .account-item-detail .right .status.pending {
+            background: #fef3e8;
+            color: #f39c12;
+        }
+
+        .add-account-btn {
+            width: 100%;
+            padding: 14px;
+            border-radius: 16px;
+            border: 2px dashed #ddd;
+            background: #fff;
+            color: #7b7b8d;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 4px;
+        }
+
+        .add-account-btn:hover {
+            border-color: #1a1a2e;
+            color: #1a1a2e;
+        }
+
+        .add-account-btn i {
+            margin-right: 8px;
+        }
+
+        .account-filter {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+        }
+
+        .account-filter-btn {
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: none;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            background: #f5f7fa;
+            color: #7b7b8d;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+
+        .account-filter-btn.active {
+            background: #1a1a2e;
+            color: #fff;
+        }
+
+        .account-filter-btn:hover:not(.active) {
+            background: #e8e8f0;
+        }
+
+        .quick-action-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .quick-action-btn {
+            background: #fff;
+            border-radius: 14px;
+            padding: 12px 8px;
+            text-align: center;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+            transition: transform 0.2s;
+        }
+
+        .quick-action-btn:active {
+            transform: scale(0.95);
+        }
+
+        .quick-action-btn i {
+            font-size: 20px;
+            color: #1a1a2e;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .quick-action-btn span {
+            font-size: 10px;
+            color: #7b7b8d;
+            font-weight: 500;
+        }
+
+        @media (min-width: 768px) {
+            .quick-action-row {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 12px;
+            }
+
+            .quick-action-btn {
+                padding: 16px 12px;
+            }
+
+            .quick-action-btn i {
+                font-size: 24px;
+            }
+
+            .quick-action-btn span {
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app">
+        <!-- HEADER -->
+        <div class="header">
+            <a class="logo-wrapper" href="dashboard.html" aria-label="Go to dashboard">
+                <div class="logo-icon">B</div>
+                <div>
+                    <div class="logo-text">BANKE<span class="highlight">ASE</span></div>
+                    <div class="logo-tagline">ONE CARD. ALL BANKS.</div>
+                </div>
+            </a>
+            <div class="header-actions">
+                <i class="fas fa-search"></i>
+                <i class="fas fa-bell"></i>
+            </div>
+        </div>
+
+        <!-- PAGE TITLE -->
+        <div class="page-title-block">
+            <h2>Accounts</h2>
+            <p>Manage all your linked bank accounts</p>
+        </div>
+
+        <div class="content-shell">
+
+            <!-- Account Summary -->
+            <div class="account-summary-card">
+                <div class="total-label">TOTAL BALANCE</div>
+                <div class="total-amount" id="accountsTotal">R0.00</div>
+                <div class="total-sub" id="accountsTotalSub">Across 0 accounts</div>
+                <div class="quick-stats">
+                    <div class="stat">
+                        <div class="number" id="accountsCount">0</div>
+                        <div class="label">Accounts</div>
+                    </div>
+                    <div class="stat">
+                        <div class="number">3</div>
+                        <div class="label">Active</div>
+                    </div>
+                    <div class="stat">
+                        <div class="number">1</div>
+                        <div class="label">Inactive</div>
+                    </div>
+                    <div class="stat">
+                        <div class="number">2</div>
+                        <div class="label">Cards</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="quick-action-row">
+                <button class="quick-action-btn" onclick="location.href='dashboard.html?page=transfer'">
+                    <i class="fas fa-exchange-alt"></i>
+                    <span>Transfer</span>
+                </button>
+                <button class="quick-action-btn" onclick="location.href='cards.html'">
+                    <i class="fas fa-credit-card"></i>
+                    <span>Add Card</span>
+                </button>
+                <button class="quick-action-btn"
+                    onclick="document.getElementById('addBankModal').classList.add('open')">
+                    <i class="fas fa-plus-circle"></i>
+                    <span>Add Bank</span>
+                </button>
+                <button class="quick-action-btn" onclick="location.href='transaction.html'">
+                    <i class="fas fa-receipt"></i>
+                    <span>History</span>
+                </button>
+            </div>
+
+            <!-- Filter -->
+            <div class="account-filter">
+                <button class="account-filter-btn active">All</button>
+                <button class="account-filter-btn">Active</button>
+                <button class="account-filter-btn">Inactive</button>
+                <button class="account-filter-btn">Cheque</button>
+                <button class="account-filter-btn">Savings</button>
+                <button class="account-filter-btn">Credit</button>
+            </div>
+
+            <!-- Account List -->
+            <div class="account-list-section" id="accountList">
+                <div class="account-list-header">
+                    <h4>Linked Accounts</h4>
+                    <span>4 accounts</span>
+                </div>
+
+                <!-- Account 1 - FNB -->
+                <div class="account-item-detail" onclick="location.href='dashboard.html'">
+                    <div class="left">
+                        <div class="icon fnb">F</div>
+                        <div class="info">
+                            <div class="name">FNB</div>
+                            <div class="number">•••• 4589</div>
+                            <div class="type">Cheque Account</div>
+                        </div>
+                    </div>
+                    <div class="right">
+                        <div class="balance">R8,250.00</div>
+                        <div class="status active">Active</div>
+                    </div>
+                </div>
+
+                <!-- Account 2 - Capitec -->
+                <div class="account-item-detail" onclick="location.href='dashboard.html'">
+                    <div class="left">
+                        <div class="icon capitec">C</div>
+                        <div class="info">
+                            <div class="name">Capitec</div>
+                            <div class="number">•••• 1234</div>
+                            <div class="type">Savings</div>
+                        </div>
+                    </div>
+                    <div class="right">
+                        <div class="balance">R3,200.00</div>
+                        <div class="status active">Active</div>
+                    </div>
+                </div>
+
+                <!-- Account 3 - Absa -->
+                <div class="account-item-detail" onclick="location.href='dashboard.html'">
+                    <div class="left">
+                        <div class="icon absa">A</div>
+                        <div class="info">
+                            <div class="name">Absa</div>
+                            <div class="number">•••• 7890</div>
+                            <div class="type">Credit Card</div>
+                        </div>
+                    </div>
+                    <div class="right">
+                        <div class="balance">R1,000.00</div>
+                        <div class="status inactive">Inactive</div>
+                    </div>
+                </div>
+
+                <!-- Account 4 - Nedbank -->
+                <div class="account-item-detail" onclick="location.href='dashboard.html'">
+                    <div class="left">
+                        <div class="icon nedbank">N</div>
+                        <div class="info">
+                            <div class="name">Nedbank</div>
+                            <div class="number">•••• 5678</div>
+                            <div class="type">Savings</div>
+                        </div>
+                    </div>
+                    <div class="right">
+                        <div class="balance">R110.00</div>
+                        <div class="status pending">Pending</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Transactions by Account -->
+            <div class="recent-activity-card">
+                <div class="recent-activity-header">
+                    <h4>Recent Activity</h4>
+                    <a href="transaction.html">View All</a>
+                </div>
+
+                <div class="recent-item">
+                    <div class="left">
+                        <div class="icon"><i class="fas fa-shopping-bag"></i></div>
+                        <div class="info">
+                            <div class="desc">Spar - FNB</div>
+                            <div class="date">Today, 14:32</div>
+                        </div>
+                    </div>
+                    <div class="amount negative">-R245.50</div>
+                </div>
+
+                <div class="recent-item">
+                    <div class="left">
+                        <div class="icon"><i class="fas fa-wallet"></i></div>
+                        <div class="info">
+                            <div class="desc">Salary - Capitec</div>
+                            <div class="date">Yesterday, 09:00</div>
+                        </div>
+                    </div>
+                    <div class="amount positive">+R12,500.00</div>
+                </div>
+
+                <div class="recent-item">
+                    <div class="left">
+                        <div class="icon"><i class="fas fa-exchange-alt"></i></div>
+                        <div class="info">
+                            <div class="desc">Transfer to FNB</div>
+                            <div class="date">Dec 14, 2024</div>
+                        </div>
+                    </div>
+                    <div class="amount negative">-R1,000.00</div>
+                </div>
+            </div>
+
+            <!-- Add Account Button -->
+            <button class="add-account-btn" onclick="document.getElementById('addBankModal').classList.add('open')">
+                <i class="fas fa-plus-circle"></i> Link New Account
+            </button>
+        </div>
+
+        <!-- BOTTOM NAV -->
+        <div class="bottom-nav">
+            <button class="nav-item" data-page="dashboard" onclick="location.href='dashboard.html'"><i
+                    class="fas fa-th"></i> Dashboard</button>
+            <button class="nav-item active" data-page="accounts"><i class="fas fa-wallet"></i> Accounts</button>
+            <button class="nav-item" data-page="analytics" onclick="location.href='analytics.html'"><i
+                    class="fas fa-chart-pie"></i> Analytics</button>
+            <button class="nav-item" data-page="settings" onclick="location.href='settings.html'"><i
+                    class="fas fa-user-cog"></i> Settings</button>
+        </div>
+        <div class="bottom-space"></div>
+    </div>
+
+    <!-- MODAL: Add Bank -->
+    <div class="modal-overlay" id="addBankModal">
+        <div class="modal">
+            <h3>Add a Bank</h3>
+            <p>Select a bank and enter your card details.</p>
+            <label for="modalBankSelect">Bank</label>
+            <select id="modalBankSelect" title="Bank to add" aria-label="Bank to add">
+                <option value="FNB">FNB</option>
+                <option value="Capitec">Capitec</option>
+                <option value="Absa">Absa</option>
+                <option value="Nedbank">Nedbank</option>
+                <option value="Standard Bank">Standard Bank</option>
+                <option value="TymeBank">TymeBank</option>
+                <option value="Bank Zero">Bank Zero</option>
+            </select>
+            <label>Account / Card Number</label>
+            <input type="text" id="modalAccount" placeholder="e.g. 1234 5678 9012 3456">
+            <label>CVV</label>
+            <input type="text" id="modalCvv" placeholder="123" maxlength="4">
+            <label>Expiry Date</label>
+            <input type="text" id="modalExpiry" placeholder="MM/YY">
+            <label>Initial Balance (R)</label>
+            <input type="number" id="modalBalance" placeholder="0.00" value="0">
+            <label for="modalAccountType">Account Type</label>
+            <select id="modalAccountType" title="Account type" aria-label="Account type">
+                <option value="cheque">Cheque Account</option>
+                <option value="savings">Savings</option>
+                <option value="credit">Credit Card</option>
+                <option value="investment">Investment</option>
+            </select>
+            <div class="btn-row">
+                <button class="btn-secondary"
+                    onclick="document.getElementById('addBankModal').classList.remove('open')">Cancel</button>
+                <button class="btn-primary"
+                    id="addAccountConfirm">Add Account</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="theme.js"></script>
+    <script>
+        // Modal toggle functionality
+        document.getElementById('addBankModal').addEventListener('click', function (e) {
+            if (e.target === this) {
+                this.classList.remove('open');
+            }
+        });
+
+        // Filter buttons
+        document.querySelectorAll('.account-filter-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                document.querySelectorAll('.account-filter-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // Quick action button handlers
+        document.querySelectorAll('.quick-action-btn').forEach(btn => {
+            btn.addEventListener('click', function (e) {
+                // Let the onclick handle navigation
+            });
+        });
+
+        document.getElementById('addAccountConfirm').addEventListener('click', async function () {
+            const bank = document.getElementById('modalBankSelect').value;
+            const account = document.getElementById('modalAccount').value.trim();
+            if (!account) {
+                alert('Enter an account or card number.');
+                return;
+            }
+            const response = await fetch('/api/banks', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: bank,
+                    accountNumber: account,
+                    balance: document.getElementById('modalBalance')?.value || 0,
+                    accountType: document.getElementById('modalAccountType')?.value || 'savings'
+                })
+            });
+            const result = await response.json();
+            if (!response.ok) {
+                alert(result.error || 'Could not link account.');
+                return;
+            }
+            document.getElementById('addBankModal').classList.remove('open');
+            alert(result.bank.name + ' account linked successfully.');
+            window.location.reload();
+        });
+
+        async function loadAccounts() {
+            const response = await fetch('/api/banks');
+            if (!response.ok) {
+                window.location.href = 'login.html';
+                return;
+            }
+            const result = await response.json();
+            const banks = result.banks;
+            const total = banks.reduce((sum, bank) => sum + Number(bank.balance), 0);
+            document.getElementById('accountsTotal').textContent = 'R' + total.toFixed(2);
+            document.getElementById('accountsTotalSub').textContent = 'Across ' + banks.length + ' accounts';
+            document.getElementById('accountsCount').textContent = banks.length;
+            document.querySelector('.account-list-header span').textContent = banks.length + ' accounts';
+            document.getElementById('accountList').innerHTML = '<div class="account-list-header"><h4>Linked Accounts</h4><span>' + banks.length + ' accounts</span></div>' + banks.map(bank => `<div class="account-item-detail" data-bank-id="${bank.id}">
+                <div class="left"><div class="icon">${bank.name.charAt(0)}</div><div class="info"><div class="name">${bank.name}</div><div class="number">•••• ${bank.last_digits}</div><div class="type">${bank.account_type}</div></div></div>
+                <div class="right"><div class="balance">R${Number(bank.balance).toFixed(2)}</div><div class="status active">Active</div></div>
+            </div>`).join('');
+            document.querySelectorAll('[data-bank-id]').forEach(item => item.addEventListener('click', () => { window.location.href = 'dashboard.html'; }));
+        }
+
+        loadAccounts().catch(() => { window.location.href = 'login.html'; });
+    </script>
+</body>
+
+</html>

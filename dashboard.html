@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bankees – Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/dashboard.css" />
+    <link rel="stylesheet" href="css/responsive.css" />
+</head>
+
+<body>
+    <div class="app" id="app">
+
+        <!-- HEADER -->
+        <div class="header">
+            <a class="logo-wrapper" href="dashboard.html" aria-label="Go to dashboard">
+                <div class="logo-icon">B</div>
+                <div>
+                    <div class="logo-text">BANKE<span class="highlight">ASE</span></div>
+                    <div class="logo-tagline">ONE CARD. ALL BANKS.</div>
+                </div>
+            </a>
+            <div class="header-actions"><i class="fas fa-bell"></i><i class="fas fa-cog"></i></div>
+        </div>
+
+        <!-- GREETING -->
+        <div class="greeting">
+            <h2>Loading profile...</h2>
+            <p>Manage all your banks with one card, one app.</p>
+        </div>
+
+        <!-- MAIN LAYOUT -->
+        <div class="main-layout">
+            <div class="left-column">
+                <!-- Balance Card -->
+                <div class="balance-card" id="balanceCard">
+                    <div class="balance-label">TOTAL BALANCE</div>
+                    <div class="balance-amount" id="totalBalance">R0.00</div>
+                    <div class="balance-sub" id="accountCount">Across 0 accounts</div>
+                    <div class="balance-footer">
+                        <div class="active-bank">
+                            <div class="label">ACTIVE BANK</div>
+                            <div class="value" id="activeBankName">—</div>
+                        </div>
+                        <div class="card-status">
+                            <div class="label">CARD STATUS</div>
+                            <div class="status-badge"><span class="status-dot"></span><span
+                                    class="status-text">Active</span></div>
+                            <div class="card-type">Bankees SmartCard</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Select Bank -->
+                <div class="section-title">
+                    <h3>Select Bank to Use</h3>
+                    <p>Choose the bank you want to use with your Bankees SmartCard.</p>
+                </div>
+                <div class="bank-list" id="bankList"></div>
+                <!-- Add bank button -->
+                <div class="add-bank-btn" id="addBankBtn"><i class="fas fa-plus-circle"></i> <span>Add a Bank</span>
+                </div>
+            </div>
+
+            <div class="right-column" id="rightColumn">
+                <!-- Bank Detail or Page wrapper -->
+                <div id="bankDetailContainer"></div>
+                <!-- Pages: settings, transfer, airtime, card -->
+                <div id="settingsPage" class="page-wrapper"><button class="page-back" data-page="back"><i
+                            class="fas fa-arrow-left"></i> Back</button>
+                    <h3>Settings</h3>
+                    <p class="page-intro">Manage your Bankees preferences.</p>
+                    <div class="settings-stack">
+                        <label for="defaultBankSelect">Default Bank</label>
+                        <select id="defaultBankSelect" title="Default bank selection" aria-label="Default bank"></select>
+                        <button class="btn-primary full-width-btn settings-save-btn" id="saveSettingsBtn">Save
+                            Settings</button>
+                    </div>
+                </div>
+                <div id="transferPage" class="page-wrapper"><button class="page-back" data-page="back"><i
+                            class="fas fa-arrow-left"></i> Back</button>
+                    <h3>Transfer</h3>
+                    <p class="page-intro">Move money between your banks.</p>
+                    <label for="transferFrom">From</label><select id="transferFrom" class="form-control" title="Transfer from bank" aria-label="Transfer from bank"></select>
+                    <label for="transferTo">To</label><select id="transferTo" class="form-control" title="Transfer to bank" aria-label="Transfer to bank"></select>
+                    <label for="transferAmount">Amount (R)</label><input type="number" id="transferAmount" class="form-control" placeholder="0.00" aria-label="Transfer amount in rand">
+                    <button class="btn-primary full-width-btn" id="transferBtn">Transfer</button>
+                    <div id="transferMsg" class="form-message"></div>
+                </div>
+                <div id="airtimePage" class="page-wrapper"><button class="page-back" data-page="back"><i
+                            class="fas fa-arrow-left"></i> Back</button>
+                    <h3>Airtime</h3>
+                    <p class="page-intro">Buy airtime for any network.</p>
+                    <label for="airtimeNetwork">Network</label><select id="airtimeNetwork" class="form-control" title="Network provider" aria-label="Network provider">
+                        <option>Vodacom</option>
+                        <option>MTN</option>
+                        <option>Cell C</option>
+                        <option>Telkom</option>
+                    </select>
+                    <label for="airtimePhone">Cellphone Number</label><input type="text" id="airtimePhone" class="form-control" placeholder="082 123 4567" aria-label="Cellphone number">
+                    <label for="airtimeAmount">Amount (R)</label><input type="number" id="airtimeAmount" class="form-control" placeholder="0.00" aria-label="Airtime amount in rand">
+                    <label for="airtimeBank">Pay with Bank</label><select id="airtimeBank" class="form-control" title="Bank for airtime purchase" aria-label="Bank for airtime purchase"></select>
+                    <button class="btn-primary full-width-btn" id="buyAirtimeBtn">Buy
+                        Airtime</button>
+                    <div id="airtimeMsg" class="form-message"></div>
+                </div>
+                <div id="cardPage" class="page-wrapper"><button class="page-back" data-page="back"><i
+                            class="fas fa-arrow-left"></i> Back</button>
+                    <h3>Card Management</h3>
+                    <p class="page-intro">Your Bankees SmartCard details.</p>
+                    <p>💳 Card Number: **** **** **** 1234<br>Expiry: 12/26<br>CVV: ***</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="footer">
+            <a class="logo-wrapper" href="dashboard.html" aria-label="Go to dashboard">
+                <div class="logo-icon">B</div>
+                <div>
+                    <div class="logo-text">BANKE<span class="highlight">ASE</span></div>
+                    <div class="logo-tagline card-footer-tagline">ONE CARD. ALL BANKS.</div>
+                </div>
+            </a>
+            <div class="tagline">Total Freedom.</div>
+        </div>
+
+        <!-- BOTTOM NAV -->
+        <!-- BOTTOM NAV - Updated with Analytics -->
+        <div class="bottom-nav">
+            <button class="nav-item active" data-page="dashboard" onclick="location.href='dashboard.html'"><i
+                    class="fas fa-th"></i> Dashboard</button>
+            <button class="nav-item" data-page="accounts" onclick="location.href='accounts.html'"><i class="fas fa-wallet"></i>
+                Accounts</button>
+            <button class="nav-item" data-page="analytics" onclick="location.href='analytics.html'"><i
+                    class="fas fa-chart-pie"></i> Analytics</button>
+            <button class="nav-item" data-page="settings" onclick="location.href='settings.html'"><i
+                    class="fas fa-user-cog"></i> Settings</button>
+        </div>
+
+    <!-- MODAL: Add Bank -->
+    <div class="modal-overlay" id="addBankModal">
+        <div class="modal">
+            <h3>Add a Bank</h3>
+            <p>Select a bank and enter your card details.</p>
+            <label for="modalBankSelect">Bank</label>
+            <select id="modalBankSelect" title="Bank to add" aria-label="Bank to add">
+                <option value="FNB">FNB</option>
+                <option value="Capitec">Capitec</option>
+                <option value="Absa">Absa</option>
+                <option value="Nedbank">Nedbank</option>
+                <option value="Standard Bank">Standard Bank</option>
+                <option value="TymeBank">TymeBank</option>
+                <option value="Bank Zero">Bank Zero</option>
+            </select>
+            <label>Account / Card Number</label><input type="text" id="modalAccount"
+                placeholder="e.g. 1234 5678 9012 3456">
+            <label>CVV</label><input type="text" id="modalCvv" placeholder="123" maxlength="4">
+            <label>Expiry Date</label><input type="text" id="modalExpiry" placeholder="MM/YY">
+            <label>Initial Balance (R)</label><input type="number" id="modalBalance" placeholder="0.00" value="0">
+            <div class="btn-row"><button class="btn-secondary" id="modalCancel">Cancel</button><button
+                    class="btn-primary" id="modalConfirm">Add Bank</button></div>
+        </div>
+    </div>
+
+    <script src="theme.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>

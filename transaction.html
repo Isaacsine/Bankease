@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bankees – Transactions</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/responsive.css" />
+</head>
+
+<body>
+    <div class="app">
+        <!-- HEADER -->
+        <div class="header">
+            <a class="logo-wrapper" href="dashboard.html" aria-label="Go to dashboard">
+                <div class="logo-icon">B</div>
+                <div>
+                    <div class="logo-text">BANKE<span class="highlight">ASE</span></div>
+                    <div class="logo-tagline">ONE CARD. ALL BANKS.</div>
+                </div>
+            </a>
+            <div class="header-actions"><i class="fas fa-bell"></i><i class="fas fa-cog"></i></div>
+        </div>
+
+        <div class="transaction-heading">
+            <h2>Transactions</h2>
+            <p>View all your transaction history.</p>
+        </div>
+
+        <div class="transaction-content">
+            <div class="transaction-filters">
+                <button class="transaction-filter active" data-filter="all">All</button>
+                <button class="transaction-filter" data-filter="income">Income</button>
+                <button class="transaction-filter" data-filter="expense">Expense</button>
+                <button class="transaction-filter" data-filter="transfer">Transfers</button>
+            </div>
+
+            <div class="transaction-list" id="transactionList">
+                <div class="transaction-item" data-kind="expense">
+                    <div>
+                        <div class="transaction-name">Spar</div>
+                        <div class="transaction-date">Today, 14:32</div>
+                    </div>
+                    <div class="transaction-amount expense">-R245.50</div>
+                </div>
+                <div class="transaction-item" data-kind="income">
+                    <div>
+                        <div class="transaction-name">Salary</div>
+                        <div class="transaction-date">Yesterday, 09:00</div>
+                    </div>
+                    <div class="transaction-amount income">+R12,500.00</div>
+                </div>
+                <div class="transaction-item" data-kind="transfer">
+                    <div>
+                        <div class="transaction-name">Transfer to FNB</div>
+                        <div class="transaction-date">Dec 14, 2024</div>
+                    </div>
+                    <div class="transaction-amount transfer">-R1,000.00</div>
+                </div>
+                <div class="transaction-item" data-kind="expense">
+                    <div>
+                        <div class="transaction-name">Checkers</div>
+                        <div class="transaction-date">Dec 13, 2024</div>
+                    </div>
+                    <div class="transaction-amount expense">-R189.00</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- BOTTOM NAV -->
+        <div class="bottom-nav">
+            <button class="nav-item" data-page="dashboard"><i class="fas fa-th"></i> Dashboard</button>
+            <button class="nav-item" data-page="accounts"><i class="fas fa-wallet"></i> Accounts</button>
+            <button class="nav-item active" data-page="transactions"><i class="fas fa-receipt"></i>
+                Transactions</button>
+            <button class="nav-item" data-page="settings"><i class="fas fa-user-cog"></i> Settings</button>
+        </div>
+        <div class="bottom-space"></div>
+    </div>
+    <script src="theme.js"></script>
+    <script>
+        const transactionList = document.getElementById('transactionList');
+        async function loadTransactions() {
+            const response = await fetch('/api/transactions');
+            if (!response.ok) {
+                window.location.href = 'login.html';
+                return;
+            }
+            const result = await response.json();
+            transactionList.innerHTML = result.transactions.length ? result.transactions.map(transaction => {
+                const kind = transaction.amount > 0 ? 'income' : transaction.title.toLowerCase().includes('transfer') ? 'transfer' : 'expense';
+                const amount = Number(transaction.amount);
+                return `<div class="transaction-item" data-kind="${kind}">
+                    <div><div class="transaction-name">${transaction.title}</div><div class="transaction-date">${new Date(transaction.created_at).toLocaleString()}</div></div>
+                    <div class="transaction-amount ${kind}">${amount >= 0 ? '+' : '-'}R${Math.abs(amount).toFixed(2)}</div>
+                </div>`;
+            }).join('') : '<p class="transaction-empty">No transactions yet.</p>';
+        }
+
+        document.querySelectorAll('[data-filter]').forEach(button => {
+            button.addEventListener('click', () => {
+                document.querySelectorAll('[data-filter]').forEach(item => item.classList.remove('active'));
+                button.classList.add('active');
+                document.querySelectorAll('[data-kind]').forEach(item => {
+                    item.hidden = button.dataset.filter !== 'all' && item.dataset.kind !== button.dataset.filter;
+                });
+            });
+        });
+        loadTransactions().catch(() => { window.location.href = 'login.html'; });
+        document.querySelectorAll('.nav-item').forEach(button => button.addEventListener('click', () => {
+            const routes = { dashboard: 'dashboard.html', accounts: 'accounts.html', settings: 'settings.html' };
+            if (routes[button.dataset.page]) window.location.href = routes[button.dataset.page];
+        }));
+    </script>
+</body>
+
+</html>

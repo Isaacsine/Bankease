@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bankees – Settings</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/responsive.css" />
+    <style>
+        .settings-page-title {
+            padding: 16px 20px 8px;
+        }
+
+        .settings-page-title h2 {
+            font-size: 22px;
+            color: #1a1a2e;
+        }
+
+        .settings-page-title p {
+            color: #7b7b8d;
+            font-size: 14px;
+        }
+
+        .settings-content {
+            padding: 0 16px 80px;
+        }
+
+        .settings-panel {
+            background: #fff;
+            border-radius: 20px;
+            padding: 4px 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
+
+        .settings-panel-header {
+            padding: 14px 20px;
+            border-bottom: 1px solid #f5f5f5;
+        }
+
+        .settings-panel-header h4 {
+            color: #7b7b8d;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .settings-profile {
+            background: #fff;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            margin-bottom: 16px;
+            position: relative;
+        }
+
+        .profile-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .profile-avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: #1a1a2e;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .profile-meta {
+            flex: 1;
+            min-width: 0;
+            padding-right: 48px;
+        }
+
+        .profile-name {
+            font-weight: 700;
+            font-size: 18px;
+            color: #1a1a2e;
+        }
+
+        .profile-email {
+            color: #7b7b8d;
+            font-size: 13px;
+        }
+
+        .profile-badges {
+            display: flex;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .profile-badge {
+            padding: 2px 12px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .profile-badge.verified {
+            background: #27ae60;
+            color: #fff;
+        }
+
+        .profile-badge.premium {
+            background: #f5f7fa;
+            color: #1a1a2e;
+        }
+
+        .profile-edit-btn {
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: none;
+            background: #f5f7fa;
+            color: #1a1a2e;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+
+        .settings-row {
+            padding: 14px 20px;
+            border-bottom: 1px solid #f5f5f5;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .settings-row:last-child {
+            border-bottom: none;
+        }
+
+        .settings-row.compact {
+            cursor: pointer;
+        }
+
+        .settings-row.select-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .settings-label {
+            font-weight: 600;
+            color: #1a1a2e;
+            font-size: 14px;
+        }
+
+        .settings-subtext {
+            color: #7b7b8d;
+            font-size: 12px;
+        }
+
+        .settings-select {
+            padding: 6px 12px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            font-size: 13px;
+            background: #fafafa;
+            width: auto;
+            min-width: 100px;
+        }
+
+        .settings-select.short {
+            min-width: 80px;
+        }
+
+        .settings-select.long {
+            min-width: 120px;
+        }
+
+        .settings-icon {
+            width: 24px;
+            color: #1a1a2e;
+        }
+
+        .settings-chevron {
+            color: #7b7b8d;
+        }
+
+        .settings-toggle {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+
+        .settings-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .settings-toggle .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #ccc;
+            border-radius: 24px;
+            transition: 0.3s;
+        }
+
+        .settings-toggle .slider::before {
+            content: '';
+            position: absolute;
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background: #fff;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+
+        .settings-toggle input:checked + .slider {
+            background: #27ae60;
+        }
+
+        .settings-toggle input:checked + .slider::before {
+            transform: translateX(20px);
+        }
+
+        .settings-status {
+            padding: 2px 10px;
+            border-radius: 12px;
+            background: #e74c3c;
+            color: #fff;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .settings-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .settings-meta span {
+            font-size: 12px;
+            color: #7b7b8d;
+        }
+
+        .settings-legal-row {
+            padding: 14px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .settings-signout {
+            width: 100%;
+            padding: 16px;
+            border-radius: 16px;
+            border: none;
+            background: #e74c3c;
+            color: #fff;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            margin-top: 8px;
+        }
+
+        .settings-version {
+            text-align: center;
+            padding: 20px 0;
+            color: #7b7b8d;
+            font-size: 12px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app">
+        <!-- HEADER -->
+        <div class="header">
+            <a class="logo-wrapper" href="dashboard.html" aria-label="Go to dashboard">
+                <div class="logo-icon">B</div>
+                <div>
+                    <div class="logo-text">BANKE<span class="highlight">ASE</span></div>
+                    <div class="logo-tagline">ONE CARD. ALL BANKS.</div>
+                </div>
+            </a>
+            <div class="header-actions">
+                <i class="fas fa-search"></i>
+                <i class="fas fa-bell"></i>
+            </div>
+        </div>
+
+        <!-- PAGE TITLE -->
+        <div class="settings-page-title">
+            <h2>Settings</h2>
+            <p>Manage your Bankees preferences and account settings.</p>
+        </div>
+
+        <div class="settings-content">
+
+            <!-- PROFILE SECTION -->
+            <div class="settings-profile">
+                <div class="profile-row">
+                    <div class="profile-avatar" id="profileAvatar">U</div>
+                    <div class="profile-meta">
+                        <div class="profile-name" id="profileName">Loading profile...</div>
+                        <div class="profile-email" id="profileEmail">Loading email...</div>
+                        <div class="profile-badges">
+                            <span class="profile-badge verified">Verified</span>
+                            <span class="profile-badge premium">Premium</span>
+                        </div>
+                    </div>
+                    <button class="profile-edit-btn">Edit</button>
+                </div>
+            </div>
+
+            <!-- PREFERENCES -->
+            <div class="settings-panel">
+                <div class="settings-panel-header">
+                    <h4>Preferences</h4>
+                </div>
+
+                <!-- Default Bank -->
+                <div class="settings-row select-row">
+                    <div>
+                        <div class="settings-label">Default Bank</div>
+                        <div class="settings-subtext">Set your preferred bank for payments</div>
+                    </div>
+                    <select class="settings-select" title="Default bank" aria-label="Default bank">
+                        <option>FNB</option>
+                        <option>Capitec</option>
+                        <option>Absa</option>
+                        <option>Nedbank</option>
+                        <option selected>Standard Bank</option>
+                    </select>
+                </div>
+
+                <!-- Currency -->
+                <div class="settings-row select-row">
+                    <div>
+                        <div class="settings-label">Currency</div>
+                        <div class="settings-subtext">Display currency for all transactions</div>
+                    </div>
+                    <select class="settings-select short" title="Currency" aria-label="Currency">
+                        <option selected>ZAR (R)</option>
+                        <option>USD ($)</option>
+                        <option>EUR (€)</option>
+                        <option>GBP (£)</option>
+                    </select>
+                </div>
+
+                <!-- Language -->
+                <div class="settings-row select-row">
+                    <div>
+                        <div class="settings-label">Language</div>
+                        <div class="settings-subtext">Choose your preferred language</div>
+                    </div>
+                    <select class="settings-select" title="Language" aria-label="Language">
+                        <option selected>English</option>
+                        <option>Afrikaans</option>
+                        <option>isiZulu</option>
+                        <option>isiXhosa</option>
+                        <option>Setswana</option>
+                    </select>
+                </div>
+
+                <!-- Date Format -->
+                <div class="settings-row select-row">
+                    <div>
+                        <div class="settings-label">Date Format</div>
+                        <div class="settings-subtext">How dates are displayed</div>
+                    </div>
+                    <select class="settings-select long" title="Date format" aria-label="Date format">
+                        <option selected>DD/MM/YYYY</option>
+                        <option>MM/DD/YYYY</option>
+                        <option>YYYY/MM/DD</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- SECURITY -->
+            <div class="settings-panel">
+                <div class="settings-panel-header">
+                    <h4>Security</h4>
+                </div>
+
+                <!-- Change Password -->
+                <button class="settings-row compact" onclick="alert('Help Center is coming soon.')">
+                    <div>
+                        <div class="settings-label"><i class="fas fa-key settings-icon"></i> Change Password</div>
+                        <div class="settings-subtext">Update your login password</div>
+                    </div>
+                    <i class="fas fa-chevron-right settings-chevron"></i>
+                </button>
+
+                <!-- Biometric Login -->
+                <div class="settings-row">
+                    <div>
+                        <div class="settings-label"><i class="fas fa-fingerprint settings-icon"></i> Biometric Login</div>
+                        <div class="settings-subtext">Use fingerprint or face ID</div>
+                    </div>
+                    <label class="settings-toggle" aria-label="Biometric login">
+                        <input type="checkbox" checked />
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <!-- Two-Factor Authentication -->
+                <div class="settings-row">
+                    <div>
+                        <div class="settings-label"><i class="fas fa-shield-alt settings-icon"></i> Two-Factor Auth</div>
+                        <div class="settings-subtext">Extra layer of security</div>
+                    </div>
+                    <label class="settings-toggle" aria-label="Two-factor authentication">
+                        <input type="checkbox" data-theme-toggle />
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <!-- Session Management -->
+                <button class="settings-row compact" onclick="alert('Live chat is available during support hours.')">
+                    <div>
+                        <div class="settings-label"><i class="fas fa-laptop settings-icon"></i> Session Management</div>
+                        <div class="settings-subtext">Manage active sessions</div>
+                    </div>
+                    <i class="fas fa-chevron-right settings-chevron"></i>
+                </button>
+            </div>
+
+            <!-- NOTIFICATIONS -->
+            <div class="settings-panel">
+                <div class="settings-panel-header">
+                    <h4>Notifications</h4>
+                </div>
+
+                <!-- Transaction Alerts -->
+                <div class="settings-row">
+                    <div>
+                        <div class="settings-label">Transaction Alerts</div>
+                        <div class="settings-subtext">Get notified for all transactions</div>
+                    </div>
+                    <label class="settings-toggle" aria-label="Transaction alerts">
+                        <input type="checkbox" checked />
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <!-- Balance Updates -->
+                <div class="settings-row">
+                    <div>
+                        <div class="settings-label">Balance Updates</div>
+                        <div class="settings-subtext">Daily balance summary</div>
+                    </div>
+                    <label class="settings-toggle" aria-label="Balance updates">
+                        <input type="checkbox" />
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <!-- Promotions & Offers -->
+                <div class="settings-row">
+                    <div>
+                        <div class="settings-label">Promotions & Offers</div>
+                        <div class="settings-subtext">Exclusive deals and offers</div>
+                    </div>
+                    <label class="settings-toggle" aria-label="Promotions and offers">
+                        <input type="checkbox" checked />
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- PAYMENT METHODS -->
+            <div class="settings-panel">
+                <div class="settings-panel-header">
+                    <h4>Payment Methods</h4>
+                </div>
+
+                <!-- Linked Cards -->
+                <a class="settings-row compact" href="mailto:support@bankees.co.za">
+                    <div>
+                        <div class="settings-label"><i class="fas fa-credit-card settings-icon"></i> Manage Cards</div>
+                        <div class="settings-subtext">Add or remove linked cards</div>
+                    </div>
+                    <i class="fas fa-chevron-right settings-chevron"></i>
+                </a>
+
+                <!-- Bank Accounts -->
+                <a class="settings-row compact" href="tel:0861226533">
+                    <div>
+                        <div class="settings-label"><i class="fas fa-university settings-icon"></i> Bank Accounts</div>
+                        <div class="settings-subtext">Manage linked bank accounts</div>
+                    </div>
+                    <i class="fas fa-chevron-right settings-chevron"></i>
+                </a>
+            </div>
+
+            <!-- APP SETTINGS -->
+            <div class="settings-panel">
+                <div class="settings-panel-header">
+                    <h4>App Settings</h4>
+                </div>
+
+                <!-- Dark Mode -->
+                <div class="settings-row">
+                    <div>
+                        <div class="settings-label"><i class="fas fa-moon settings-icon"></i> Dark Mode</div>
+                        <div class="settings-subtext">Switch to dark theme</div>
+                    </div>
+                    <label class="settings-toggle" aria-label="Dark mode">
+                        <input type="checkbox" />
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <!-- Auto-Lock -->
+                <div class="settings-row select-row">
+                    <div>
+                        <div class="settings-label"><i class="fas fa-lock settings-icon"></i> Auto-Lock</div>
+                        <div class="settings-subtext">Auto-lock after inactivity</div>
+                    </div>
+                    <select class="settings-select short" title="Auto-lock duration" aria-label="Auto-lock duration">
+                        <option>Never</option>
+                        <option>1 minute</option>
+                        <option selected>5 minutes</option>
+                        <option>15 minutes</option>
+                        <option>30 minutes</option>
+                    </select>
+                </div>
+
+                <!-- Face ID / Touch ID -->
+                <div class="settings-row">
+                    <div>
+                        <div class="settings-label"><i class="fas fa-face-smile settings-icon"></i> Face ID / Touch ID</div>
+                        <div class="settings-subtext">Quick unlock with biometrics</div>
+                    </div>
+                    <label class="settings-toggle" aria-label="Face ID or touch ID">
+                        <input type="checkbox" checked />
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <!-- Cache & Storage -->
+                <button class="settings-row compact" onclick="alert('Privacy Policy will be available soon.')">
+                    <div>
+                        <div class="settings-label"><i class="fas fa-database settings-icon"></i> Cache & Storage</div>
+                        <div class="settings-subtext">Clear cache (12.5 MB used)</div>
+                    </div>
+                    <div class="settings-meta">
+                        <span>12.5 MB</span>
+                        <i class="fas fa-chevron-right settings-chevron"></i>
+                    </div>
+                </button>
+            </div>
+
+            <!-- SUPPORT -->
+            <div class="settings-panel">
+                <div class="settings-panel-header">
+                    <h4>Support</h4>
+                </div>
+
+                <button class="settings-row compact" onclick="alert('Terms of Service will be available soon.')">
+                    <div>
+                        <div class="settings-label"><i class="fas fa-question-circle settings-icon"></i> Help Center</div>
+                        <div class="settings-subtext">FAQs and guides</div>
+                    </div>
+                    <i class="fas fa-chevron-right settings-chevron"></i>
+                </button>
+
+                <div class="settings-row compact">
+                    <div>
+                        <div class="settings-label"><i class="fas fa-comment settings-icon"></i> Live Chat</div>
+                        <div class="settings-subtext">Chat with support agent</div>
+                    </div>
+                    <span class="settings-status">Online</span>
+                </div>
+
+                <div class="settings-row compact">
+                    <div>
+                        <div class="settings-label"><i class="fas fa-envelope settings-icon"></i> Email Support</div>
+                        <div class="settings-subtext">support@bankees.co.za</div>
+                    </div>
+                    <i class="fas fa-chevron-right settings-chevron"></i>
+                </div>
+
+                <div class="settings-row compact">
+                    <div>
+                        <div class="settings-label"><i class="fas fa-phone settings-icon"></i> Call Support</div>
+                        <div class="settings-subtext">0861 226 533</div>
+                    </div>
+                    <i class="fas fa-chevron-right settings-chevron"></i>
+                </div>
+            </div>
+
+            <!-- LEGAL -->
+            <div class="settings-panel">
+                <div class="settings-panel-header">
+                    <h4>Legal</h4>
+                </div>
+
+                <div class="settings-row compact">
+                    <div>
+                        <div class="settings-label">Privacy Policy</div>
+                    </div>
+                    <i class="fas fa-chevron-right settings-chevron"></i>
+                </div>
+
+                <div class="settings-row compact">
+                    <div>
+                        <div class="settings-label">Terms of Service</div>
+                    </div>
+                    <i class="fas fa-chevron-right settings-chevron"></i>
+                </div>
+
+                <button class="settings-legal-row" onclick="alert('Bankees SmartCard management platform.')">
+                    <div>
+                        <div class="settings-label">About Bankees</div>
+                    </div>
+                    <i class="fas fa-chevron-right settings-chevron"></i>
+                </button>
+            </div>
+
+            <!-- SIGN OUT -->
+            <button class="settings-signout" id="signOutBtn">
+                <i class="fas fa-sign-out-alt"></i> Sign Out
+            </button>
+
+            <div class="settings-version">
+                Version 2.4.1 • Bankees SmartCard
+            </div>
+        </div>
+
+        <!-- BOTTOM NAV -->
+        <div class="bottom-nav">
+            <button class="nav-item" data-page="dashboard" onclick="location.href='dashboard.html'"><i
+                    class="fas fa-th"></i> Dashboard</button>
+            <button class="nav-item" data-page="accounts" onclick="location.href='accounts.html'"><i
+                    class="fas fa-wallet"></i> Accounts</button>
+            <button class="nav-item" data-page="cards" onclick="location.href='cards.html'"><i
+                    class="fas fa-credit-card"></i> Cards</button>
+            <button class="nav-item active" data-page="settings"><i class="fas fa-user-cog"></i> Settings</button>
+        </div>
+        <div class="bottom-space"></div>
+    </div>
+    <script src="theme.js"></script>
+    <script>
+        fetch('/api/me').then(response => {
+            if (!response.ok) throw new Error('Not logged in');
+            return response.json();
+        }).then(result => {
+            document.getElementById('profileName').textContent = result.user.fullName;
+            document.getElementById('profileEmail').textContent = result.user.email;
+            document.getElementById('profileAvatar').textContent = result.user.fullName.split(/\s+/).map(name => name[0]).join('').slice(0, 2).toUpperCase();
+        }).catch(() => { window.location.href = 'login.html'; });
+    </script>
+    <script>
+        document.getElementById('signOutBtn').addEventListener('click', async () => {
+            const response = await fetch('/api/logout', { method: 'POST', credentials: 'same-origin' });
+            if (response.ok) window.location.href = 'login.html';
+            else alert('Unable to sign out. Please try again.');
+        });
+        document.querySelectorAll('.nav-item').forEach(button => button.addEventListener('click', () => {
+            const routes = { dashboard: 'dashboard.html', accounts: 'accounts.html', cards: 'cards.html' };
+            if (routes[button.dataset.page]) window.location.href = routes[button.dataset.page];
+        }));
+    </script>
+</body>
+
+</html>

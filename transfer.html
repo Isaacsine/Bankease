@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bankees - Transfer</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+    <div class="app">
+        <div class="header">
+            <a class="logo-wrapper" href="dashboard.html" aria-label="Go to dashboard"><div class="logo-icon">B</div><div><div class="logo-text">BANKE<span class="highlight">ASE</span></div><div class="logo-tagline">ONE CARD. ALL BANKS.</div></div></a>
+            <div class="header-actions"><a href="dashboard.html" aria-label="Back to dashboard"><i class="fas fa-arrow-left"></i></a></div>
+        </div>
+        <div class="page-title-block"><h2>Transfer Money</h2><p>Move money securely between your linked banks.</p></div>
+        <main class="content-shell">
+            <form id="transferForm" class="settings-panel">
+                <label for="fromBank">From bank</label>
+                <select id="fromBank" required></select>
+                <label for="toBank">To bank</label>
+                <select id="toBank" required></select>
+                <label for="transferAmount">Amount (R)</label>
+                <input id="transferAmount" type="number" min="0.01" step="0.01" placeholder="0.00" required>
+                <button class="btn-primary full-width-btn" type="submit"><i class="fas fa-exchange-alt"></i> Transfer</button>
+                <p id="transferMessage" class="form-message" role="alert"></p>
+            </form>
+        </main>
+        <div class="bottom-nav">
+            <button class="nav-item" data-route="dashboard.html"><i class="fas fa-th"></i> Dashboard</button>
+            <button class="nav-item" data-route="accounts.html"><i class="fas fa-wallet"></i> Accounts</button>
+            <button class="nav-item active"><i class="fas fa-exchange-alt"></i> Transfer</button>
+            <button class="nav-item" data-route="settings.html"><i class="fas fa-user-cog"></i> Settings</button>
+        </div>
+    </div>
+    <script src="theme.js"></script>
+    <script>
+        const fromBank = document.getElementById('fromBank');
+        const toBank = document.getElementById('toBank');
+        const message = document.getElementById('transferMessage');
+        const form = document.getElementById('transferForm');
+
+        function showMessage(text, type) {
+            message.textContent = text;
+            message.className = 'form-message ' + type;
+        }
+
+        async function loadBanks() {
+            const response = await fetch('/api/banks');
+            if (!response.ok) throw new Error('Could not load bank accounts.');
+            const result = await response.json();
+            const options = result.banks.map(bank => `<option value="${bank.id}">${bank.name} (R${bank.balance.toFixed(2)})</option>`).join('');
+            fromBank.innerHTML = options;
+            toBank.innerHTML = options;
+            if (toBank.options.length > 1) toBank.selectedIndex = 1;
+        }
+
+        form.addEventListener('submit', async event => {
+            event.preventDefault();
+            const submit = form.querySelector('button[type="submit"]');
+            submit.disabled = true;
+            showMessage('Processing transfer...', '');
+            try {
+                const response = await fetch('/api/transfers', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ fromId: fromBank.value, toId: toBank.value, amount: Number(document.getElementById('transferAmount').value) })
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.error || 'Transfer failed.');
+                showMessage('Transfer completed successfully.', 'success');
+                await loadBanks();
+                form.reset();
+            } catch (error) {
+                showMessage(error.message, 'error');
+            } finally {
+                submit.disabled = false;
+            }
+        });
+
+        document.querySelectorAll('[data-route]').forEach(button => button.addEventListener('click', () => {
+            window.location.href = button.dataset.route;
+        }));
+        loadBanks().catch(error => showMessage(error.message, 'error'));
+    </script>
+</body>
+</html>

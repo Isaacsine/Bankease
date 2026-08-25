@@ -1,0 +1,250 @@
+/* ============================================================ */
+/* responsive.css - Responsive styles                            */
+/* ============================================================ */
+
+/* ===== MOBILE FIRST (Default is mobile) ===== */
+
+/* Small phones */
+@media (max-width: 375px) {
+    .logo-text {
+        font-size: 14px;
+    }
+
+    .balance-amount {
+        font-size: 26px;
+    }
+
+    .header-actions {
+        gap: 12px;
+        font-size: 16px;
+    }
+
+    .greeting h2 {
+        font-size: 18px;
+    }
+
+    .balance-footer {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .bank-detail-balance .amount {
+        font-size: 22px;
+    }
+
+    .bank-detail-actions {
+        flex-direction: column;
+    }
+
+    .modal {
+        padding: 16px;
+    }
+
+    .card-display .card-number {
+        font-size: 16px;
+        letter-spacing: 2px;
+    }
+}
+
+/* ===== TABLETS ===== */
+@media (min-width: 768px) {
+    .app {
+        max-width: 100%;
+        padding: 0 32px;
+    }
+
+    .main-layout {
+        flex-direction: row;
+        gap: 24px;
+    }
+
+    .left-column {
+        flex: 1.2;
+    }
+
+    .right-column {
+        flex: 1;
+    }
+
+    .bottom-nav {
+        max-width: 100%;
+        padding: 8px 32px;
+    }
+
+    .greeting {
+        padding: 24px 0 12px;
+    }
+
+    .greeting h2 {
+        font-size: 24px;
+    }
+
+    .balance-amount {
+        font-size: 36px;
+    }
+
+    .bank-detail-actions {
+        flex-direction: row;
+    }
+
+    .filter-buttons {
+        gap: 12px;
+    }
+
+    .filter-btn {
+        padding: 10px 20px;
+        font-size: 14px;
+    }
+}
+
+/* ===== LARGE DESKTOPS ===== */
+@media (min-width: 1025px) {
+    .app {
+        max-width: 900px;
+        padding: 0 40px;
+        box-shadow: 0 0 40px rgba(0, 0, 0, 0.04);
+        background: #f5f7fa;
+        min-height: 100vh;
+    }
+
+    .main-layout {
+        gap: 28px;
+    }
+
+    .left-column {
+        flex: 1.3;
+    }
+
+    .right-column {
+        flex: 1;
+    }
+
+    .bottom-nav {
+        max-width: 900px;
+        padding: 8px 40px;
+    }
+
+    .balance-amount {
+        font-size: 40px;
+    }
+
+    .greeting h2 {
+        font-size: 28px;
+    }
+
+    .bank-item {
+        padding: 16px 20px;
+        border-radius: 16px;
+    }
+
+    .bank-item .bank-name {
+        font-size: 16px;
+    }
+
+    .bank-item .bank-balance {
+        font-size: 16px;
+    }
+
+    .transaction-item {
+        padding: 14px 20px;
+    }
+}
+
+/* ===== TOUCH DEVICES ===== */
+@media (hover: none) {
+
+    .bank-item,
+    .add-bank-btn,
+    .nav-item,
+    .filter-btn {
+        cursor: default;
+    }
+}
+
+/* ===== SAFE AREA (Notch phones) ===== */
+@supports (padding: max(0px)) {
+    .bottom-nav {
+        padding-bottom: max(8px, env(safe-area-inset-bottom));
+    }
+
+    .bottom-space {
+        height: max(70px, calc(70px + env(safe-area-inset-bottom)));
+    }
+}
+
+/* ===== LANDSCAPE PHONES ===== */
+@media (max-height: 500px) and (orientation: landscape) {
+    .greeting {
+        padding: 8px 16px 4px;
+    }
+
+    .greeting h2 {
+        font-size: 16px;
+    }
+
+    .greeting p {
+        font-size: 12px;
+    }
+
+    .balance-card {
+        padding: 12px 16px;
+    }
+
+    .balance-amount {
+        font-size: 24px;
+    }
+
+    .balance-footer {
+        margin-top: 8px;
+        padding-top: 8px;
+    }
+
+    .main-layout {
+        padding: 8px 12px;
+        gap: 8px;
+    }
+
+    .bank-item {
+        padding: 10px 14px;
+    }
+
+    .bottom-nav {
+        padding: 4px 0;
+    }
+
+    .nav-item {
+        padding: 2px 8px;
+        font-size: 8px;
+    }
+
+    .nav-item i {
+        font-size: 16px;
+    }
+
+    .bottom-space {
+        height: 50px;
+    }
+}
+
+/* ===== PRINT STYLES ===== */
+@media print {
+
+    .bottom-nav,
+    .header-actions,
+    .add-bank-btn {
+        display: none !important;
+    }
+
+    .app {
+        max-width: 100%;
+        padding: 20px;
+        background: #fff;
+    }
+
+    .balance-card,
+    .bank-item,
+    .page-wrapper {
+        box-shadow: none !important;
+        border: 1px solid #ddd;
+    }
+}

@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bankees – Analytics</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/responsive.css" />
+    <style>
+        /* Analytics-specific styles */
+        .analytics-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            margin-bottom: 12px;
+        }
+
+        .analytics-stat {
+            text-align: center;
+            padding: 8px 0;
+        }
+
+        .analytics-stat .number {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+
+        .analytics-stat .label {
+            font-size: 12px;
+            color: #7b7b8d;
+            margin-top: 2px;
+        }
+
+        .analytics-stat .trend-up {
+            color: #2ecc71;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .analytics-stat .trend-down {
+            color: #e74c3c;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .spending-category {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #f5f5f5;
+        }
+
+        .spending-category:last-child {
+            border-bottom: none;
+        }
+
+        .category-bar {
+            flex: 1;
+            height: 6px;
+            background: #f5f7fa;
+            border-radius: 3px;
+            margin: 0 12px;
+            overflow: hidden;
+        }
+
+        .category-bar .fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 1s ease;
+        }
+
+        .category-label {
+            font-weight: 600;
+            font-size: 13px;
+            color: #1a1a2e;
+            min-width: 70px;
+        }
+
+        .category-amount {
+            font-weight: 600;
+            font-size: 13px;
+            color: #1a1a2e;
+            min-width: 70px;
+            text-align: right;
+        }
+
+        .monthly-chart {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            height: 120px;
+            padding: 10px 0;
+            gap: 6px;
+        }
+
+        .monthly-bar {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .monthly-bar .bar {
+            width: 100%;
+            max-width: 30px;
+            border-radius: 4px 4px 0 0;
+            min-height: 4px;
+            transition: height 1s ease;
+        }
+
+        .monthly-bar .label {
+            font-size: 10px;
+            color: #7b7b8d;
+        }
+
+        .monthly-bar .value {
+            font-size: 9px;
+            color: #7b7b8d;
+            font-weight: 600;
+        }
+
+        .insight-item {
+            display: flex;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid #f5f5f5;
+        }
+
+        .insight-item:last-child {
+            border-bottom: none;
+        }
+
+        .insight-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .insight-icon.green {
+            background: #e8f8f0;
+            color: #2ecc71;
+        }
+
+        .insight-icon.red {
+            background: #fde8e8;
+            color: #e74c3c;
+        }
+
+        .insight-icon.blue {
+            background: #e8f0fe;
+            color: #4a6cf7;
+        }
+
+        .insight-icon.orange {
+            background: #fef3e8;
+            color: #f39c12;
+        }
+
+        .insight-text {
+            flex: 1;
+        }
+
+        .insight-text .title {
+            font-weight: 600;
+            color: #1a1a2e;
+            font-size: 14px;
+        }
+
+        .insight-text .desc {
+            font-size: 12px;
+            color: #7b7b8d;
+        }
+
+        .period-selector {
+            display: flex;
+            gap: 8px;
+            padding: 4px;
+            background: #f5f7fa;
+            border-radius: 12px;
+        }
+
+        .period-btn {
+            flex: 1;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            background: transparent;
+            color: #7b7b8d;
+            transition: all 0.2s;
+        }
+
+        .period-btn.active {
+            background: #fff;
+            color: #1a1a2e;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .period-btn:hover:not(.active) {
+            color: #1a1a2e;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .page-title-block {
+            padding: 16px 20px 8px;
+        }
+
+        .page-title-block h2 {
+            font-size: 22px;
+            color: #1a1a2e;
+        }
+
+        .page-title-block p {
+            color: #7b7b8d;
+            font-size: 14px;
+        }
+
+        .content-shell {
+            padding: 0 16px 80px;
+        }
+
+        .analytics-period-wrapper {
+            margin-bottom: 16px;
+        }
+
+        .analytics-stats-grid {
+            margin-bottom: 12px;
+        }
+
+        .analytics-card-compact {
+            margin-bottom: 0;
+        }
+
+        .monthly-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .monthly-header h4 {
+            font-size: 14px;
+            color: #1a1a2e;
+        }
+
+        .monthly-header span {
+            font-size: 12px;
+            color: #7b7b8d;
+        }
+
+        .bar-40 { height: 40px; background: #1a1a2e; }
+        .bar-35 { height: 35px; background: #2d2d44; }
+        .bar-48 { height: 48px; background: #1a1a2e; }
+        .bar-62 { height: 62px; background: #2d2d44; }
+        .bar-54 { height: 54px; background: #1a1a2e; }
+        .bar-68 { height: 68px; background: #2d2d44; }
+        .bar-82 { height: 82px; background: #1a1a2e; }
+        .bar-74 { height: 74px; background: #2d2d44; }
+        .bar-88 { height: 88px; background: #1a1a2e; }
+        .bar-100 { height: 100px; background: #2d2d44; }
+        .bar-94 { height: 94px; background: #1a1a2e; }
+        .bar-106 { height: 106px; background: #e67e22; }
+
+        .analytics-card-spaced {
+            margin-top: 12px;
+        }
+
+        .analytics-card-spaced h4 {
+            font-size: 14px;
+            color: #1a1a2e;
+            margin-bottom: 8px;
+        }
+
+        .fill-35 { width: 35%; background: #1a1a2e; }
+        .fill-28 { width: 28%; background: #2d2d44; }
+        .fill-20 { width: 20%; background: #e67e22; }
+        .fill-15 { width: 15%; background: #4a6cf7; }
+        .fill-12 { width: 12%; background: #9b59b6; }
+        .fill-45 { width: 45%; background: #1a1a2e; }
+        .fill-30 { width: 30%; background: #2d2d44; }
+        .fill-10 { width: 10%; background: #7b7b8d; }
+
+        .recommendation-card {
+            margin-top: 12px;
+            background: linear-gradient(135deg, #1a1a2e, #2d2d44);
+            color: #fff;
+        }
+
+        .recommendation-card h4 {
+            font-size: 14px;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+
+        .recommendation-row {
+            display: flex;
+            gap: 12px;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .recommendation-row:last-child {
+            border-bottom: none;
+        }
+
+        .recommendation-row i {
+            font-size: 20px;
+        }
+
+        .recommendation-row .recommendation-title {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .recommendation-row .recommendation-text {
+            font-size: 12px;
+            opacity: 0.7;
+        }
+
+        .recommendation-row .recommendation-subtitle {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .recommendation-row .recommendation-subtext {
+            font-size: 12px;
+            opacity: 0.7;
+        }
+
+        .recommendation-row .icon-card { color: #e67e22; }
+        .recommendation-row .icon-trend { color: #2ecc71; }
+        .recommendation-row .icon-bank { color: #4a6cf7; }
+
+        @media (max-width: 480px) {
+            .period-selector {
+                gap: 2px;
+            }
+
+            .period-btn {
+                padding: 8px 4px;
+                font-size: 11px;
+            }
+
+            .stat-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app">
+        <!-- HEADER -->
+        <div class="header">
+            <a class="logo-wrapper" href="dashboard.html" aria-label="Go to dashboard">
+                <div class="logo-icon">B</div>
+                <div>
+                    <div class="logo-text">BANKE<span class="highlight">ASE</span></div>
+                    <div class="logo-tagline">ONE CARD. ALL BANKS.</div>
+                </div>
+            </a>
+            <div class="header-actions">
+                <i class="fas fa-download"></i>
+                <i class="fas fa-calendar-alt"></i>
+            </div>
+        </div>
+
+        <!-- PAGE TITLE -->
+        <div class="page-title-block">
+            <h2>Analytics</h2>
+            <p>Track your spending and financial insights</p>
+        </div>
+
+        <div class="content-shell">
+
+            <!-- Period Selector -->
+            <div class="analytics-period-wrapper">
+                <div class="period-selector">
+                    <button class="period-btn active">This Month</button>
+                    <button class="period-btn">Last Month</button>
+                    <button class="period-btn">This Year</button>
+                    <button class="period-btn">Custom</button>
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="stat-grid analytics-stats-grid">
+                <div class="analytics-card analytics-card-compact">
+                    <div class="analytics-stat">
+                        <div class="number">R8,450</div>
+                        <div class="label">Total Spent</div>
+                        <div class="trend-up"><i class="fas fa-arrow-up"></i> +12.5%</div>
+                    </div>
+                </div>
+                <div class="analytics-card analytics-card-compact">
+                    <div class="analytics-stat">
+                        <div class="number">R12,560</div>
+                        <div class="label">Total Income</div>
+                        <div class="trend-up"><i class="fas fa-arrow-up"></i> +8.3%</div>
+                    </div>
+                </div>
+                <div class="analytics-card analytics-card-compact">
+                    <div class="analytics-stat">
+                        <div class="number">R4,110</div>
+                        <div class="label">Savings</div>
+                        <div class="trend-up"><i class="fas fa-arrow-up"></i> +5.2%</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Monthly Spending Chart -->
+            <div class="analytics-card">
+                <div class="monthly-header">
+                    <h4>Monthly Spending</h4>
+                    <span>2024</span>
+                </div>
+                <div class="monthly-chart">
+                    <div class="monthly-bar">
+                        <div class="value">R2.1k</div>
+                        <div class="bar bar-40"></div>
+                        <div class="label">Jan</div>
+                    </div>
+                    <div class="monthly-bar">
+                        <div class="value">R1.8k</div>
+                        <div class="bar bar-35"></div>
+                        <div class="label">Feb</div>
+                    </div>
+                    <div class="monthly-bar">
+                        <div class="value">R2.5k</div>
+                        <div class="bar bar-48"></div>
+                        <div class="label">Mar</div>
+                    </div>
+                    <div class="monthly-bar">
+                        <div class="value">R3.2k</div>
+                        <div class="bar bar-62"></div>
+                        <div class="label">Apr</div>
+                    </div>
+                    <div class="monthly-bar">
+                        <div class="value">R2.8k</div>
+                        <div class="bar bar-54"></div>
+                        <div class="label">May</div>
+                    </div>
+                    <div class="monthly-bar">
+                        <div class="value">R3.5k</div>
+                        <div class="bar bar-68"></div>
+                        <div class="label">Jun</div>
+                    </div>
+                    <div class="monthly-bar">
+                        <div class="value">R4.2k</div>
+                        <div class="bar bar-82"></div>
+                        <div class="label">Jul</div>
+                    </div>
+                    <div class="monthly-bar">
+                        <div class="value">R3.8k</div>
+                        <div class="bar bar-74"></div>
+                        <div class="label">Aug</div>
+                    </div>
+                    <div class="monthly-bar">
+                        <div class="value">R4.5k</div>
+                        <div class="bar bar-88"></div>
+                        <div class="label">Sep</div>
+                    </div>
+                    <div class="monthly-bar">
+                        <div class="value">R5.1k</div>
+                        <div class="bar bar-100"></div>
+                        <div class="label">Oct</div>
+                    </div>
+                    <div class="monthly-bar">
+                        <div class="value">R4.8k</div>
+                        <div class="bar bar-94"></div>
+                        <div class="label">Nov</div>
+                    </div>
+                    <div class="monthly-bar">
+                        <div class="value">R5.4k</div>
+                        <div class="bar bar-106"></div>
+                        <div class="label">Dec</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Spending by Category -->
+            <div class="analytics-card analytics-card-spaced">
+                <h4>Spending by Category</h4>
+
+                <div class="spending-category">
+                    <span class="category-label">🛒 Shopping</span>
+                    <div class="category-bar">
+                        <div class="fill fill-35"></div>
+                    </div>
+                    <span class="category-amount">R1,890</span>
+                </div>
+
+                <div class="spending-category">
+                    <span class="category-label">🍔 Food</span>
+                    <div class="category-bar">
+                        <div class="fill fill-28"></div>
+                    </div>
+                    <span class="category-amount">R1,512</span>
+                </div>
+
+                <div class="spending-category">
+                    <span class="category-label">🚗 Transport</span>
+                    <div class="category-bar">
+                        <div class="fill fill-20"></div>
+                    </div>
+                    <span class="category-amount">R1,080</span>
+                </div>
+
+                <div class="spending-category">
+                    <span class="category-label">🏠 Bills</span>
+                    <div class="category-bar">
+                        <div class="fill fill-15"></div>
+                    </div>
+                    <span class="category-amount">R810</span>
+                </div>
+
+                <div class="spending-category">
+                    <span class="category-label">🎮 Entertainment</span>
+                    <div class="category-bar">
+                        <div class="fill fill-12"></div>
+                    </div>
+                    <span class="category-amount">R648</span>
+                </div>
+            </div>
+
+            <!-- Bank Usage -->
+            <div class="analytics-card analytics-card-spaced">
+                <h4>Bank Usage Distribution</h4>
+
+                <div class="spending-category">
+                    <span class="category-label">FNB</span>
+                    <div class="category-bar">
+                        <div class="fill fill-45"></div>
+                    </div>
+                    <span class="category-amount">45%</span>
+                </div>
+
+                <div class="spending-category">
+                    <span class="category-label">Capitec</span>
+                    <div class="category-bar">
+                        <div class="fill fill-30"></div>
+                    </div>
+                    <span class="category-amount">30%</span>
+                </div>
+
+                <div class="spending-category">
+                    <span class="category-label">Absa</span>
+                    <div class="category-bar">
+                        <div class="fill fill-20"></div>
+                    </div>
+                    <span class="category-amount">15%</span>
+                </div>
+
+                <div class="spending-category">
+                    <span class="category-label">Other</span>
+                    <div class="category-bar">
+                        <div class="fill fill-10"></div>
+                    </div>
+                    <span class="category-amount">10%</span>
+                </div>
+            </div>
+
+            <!-- Insights -->
+            <div class="analytics-card analytics-card-spaced">
+                <h4>💡 Insights</h4>
+
+                <div class="insight-item">
+                    <div class="insight-icon green"><i class="fas fa-arrow-up"></i></div>
+                    <div class="insight-text">
+                        <div class="title">Spending increased by 12.5%</div>
+                        <div class="desc">Your spending this month is higher than last month. Check your shopping
+                            category.</div>
+                    </div>
+                </div>
+
+                <div class="insight-item">
+                    <div class="insight-icon blue"><i class="fas fa-lightbulb"></i></div>
+                    <div class="insight-text">
+                        <div class="title">You could save R450 this month</div>
+                        <div class="desc">Reduce eating out by 20% to reach your savings goal of R4,500 this month.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="insight-item">
+                    <div class="insight-icon green"><i class="fas fa-piggy-bank"></i></div>
+                    <div class="insight-text">
+                        <div class="title">Best spending day: Friday</div>
+                        <div class="desc">You spend 30% more on weekends. Consider planning weekend expenses.</div>
+                    </div>
+                </div>
+
+                <div class="insight-item">
+                    <div class="insight-icon orange"><i class="fas fa-trophy"></i></div>
+                    <div class="insight-text">
+                        <div class="title">Top spending category: Shopping</div>
+                        <div class="desc">You've spent R1,890 on shopping this month, 35% of total expenses.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recommendations -->
+            <div class="analytics-card recommendation-card">
+                <h4>🎯 Recommendations</h4>
+
+                <div class="recommendation-row">
+                    <i class="fas fa-credit-card icon-card"></i>
+                    <div>
+                        <div class="recommendation-title">Switch to Bankees Card</div>
+                        <div class="recommendation-text">Using Bankees SmartCard could save you up to 2% on
+                            transactions</div>
+                    </div>
+                </div>
+
+                <div class="recommendation-row">
+                    <i class="fas fa-chart-line icon-trend"></i>
+                    <div>
+                        <div class="recommendation-title">Set a monthly budget</div>
+                        <div class="recommendation-text">You're approaching your monthly budget limit. Set a
+                            budget to stay on track.</div>
+                    </div>
+                </div>
+
+                <div class="recommendation-row">
+                    <i class="fas fa-university icon-bank"></i>
+                    <div>
+                        <div class="recommendation-subtitle">Use FNB for large purchases</div>
+                        <div class="recommendation-subtext">FNB offers the best rewards rate for large transactions
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- BOTTOM NAV -->
+        <div class="bottom-nav">
+            <button class="nav-item" data-page="dashboard" onclick="location.href='dashboard.html'"><i
+                    class="fas fa-th"></i> Dashboard</button>
+            <button class="nav-item" data-page="accounts" onclick="location.href='accounts.html'"><i
+                    class="fas fa-wallet"></i> Accounts</button>
+            <button class="nav-item active" data-page="analytics"><i class="fas fa-chart-pie"></i> Analytics</button>
+            <button class="nav-item" data-page="settings" onclick="location.href='settings.html'"><i
+                    class="fas fa-user-cog"></i> Settings</button>
+        </div>
+        <div class="bottom-space"></div>
+    </div>
+    <script src="theme.js"></script>
+</body>
+
+</html>
