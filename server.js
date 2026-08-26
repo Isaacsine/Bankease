@@ -164,4 +164,8 @@ app.use((error, request, response, next) => {
     return response.status(500).json({ error: 'Unexpected server error.' });
 });
 
-app.listen(port, () => console.log(`Bankees is running at http://localhost:${port}`));
+if (require.main === module) {
+    app.listen(port, () => console.log(`Bankees is running at http://localhost:${port}`));
+}
+
+module.exports = app;
