@@ -4,7 +4,8 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Bankees – Dashboard</title>
+    <title>Bankease – Dashboard</title>
+    <link rel="icon" type="image/png" href="assets/iconLogo.png" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/dashboard.css" />
@@ -17,13 +18,13 @@
         <!-- HEADER -->
         <div class="header">
             <a class="logo-wrapper" href="dashboard.html" aria-label="Go to dashboard">
-                <div class="logo-icon">B</div>
+                <img class="logo-icon" src="assets/bankeaseLogo.png" alt="Bankease icon">
                 <div>
-                    <div class="logo-text">BANKE<span class="highlight">ASE</span></div>
+                    <div class="logo-text">Bankease</div>
                     <div class="logo-tagline">ONE CARD. ALL BANKS.</div>
                 </div>
             </a>
-            <div class="header-actions"><i class="fas fa-bell"></i><i class="fas fa-cog"></i></div>
+            <div class="header-actions"><a href="notifications.html" aria-label="View notifications"><i class="fas fa-bell"></i></a><a href="settings.html" aria-label="Open settings"><i class="fas fa-cog"></i></a></div>
         </div>
 
         <!-- GREETING -->
@@ -49,7 +50,7 @@
                             <div class="label">CARD STATUS</div>
                             <div class="status-badge"><span class="status-dot"></span><span
                                     class="status-text">Active</span></div>
-                            <div class="card-type">Bankees SmartCard</div>
+                            <div class="card-type">Bankease SmartCard</div>
                         </div>
                     </div>
                 </div>
@@ -57,7 +58,7 @@
                 <!-- Select Bank -->
                 <div class="section-title">
                     <h3>Select Bank to Use</h3>
-                    <p>Choose the bank you want to use with your Bankees SmartCard.</p>
+                    <p>Choose the bank you want to use with your Bankease SmartCard.</p>
                 </div>
                 <div class="bank-list" id="bankList"></div>
                 <!-- Add bank button -->
@@ -72,7 +73,7 @@
                 <div id="settingsPage" class="page-wrapper"><button class="page-back" data-page="back"><i
                             class="fas fa-arrow-left"></i> Back</button>
                     <h3>Settings</h3>
-                    <p class="page-intro">Manage your Bankees preferences.</p>
+                    <p class="page-intro">Manage your Bankease preferences.</p>
                     <div class="settings-stack">
                         <label for="defaultBankSelect">Default Bank</label>
                         <select id="defaultBankSelect" title="Default bank selection" aria-label="Default bank"></select>
@@ -110,7 +111,7 @@
                 <div id="cardPage" class="page-wrapper"><button class="page-back" data-page="back"><i
                             class="fas fa-arrow-left"></i> Back</button>
                     <h3>Card Management</h3>
-                    <p class="page-intro">Your Bankees SmartCard details.</p>
+                    <p class="page-intro">Your Bankease SmartCard details.</p>
                     <p>💳 Card Number: **** **** **** 1234<br>Expiry: 12/26<br>CVV: ***</p>
                 </div>
             </div>
@@ -119,9 +120,9 @@
         <!-- FOOTER -->
         <div class="footer">
             <a class="logo-wrapper" href="dashboard.html" aria-label="Go to dashboard">
-                <div class="logo-icon">B</div>
+                <img class="logo-icon" src="assets/bankeaseLogo.png" alt="Bankease icon">
                 <div>
-                    <div class="logo-text">BANKE<span class="highlight">ASE</span></div>
+                    <div class="logo-text">Bankease</div>
                     <div class="logo-tagline card-footer-tagline">ONE CARD. ALL BANKS.</div>
                 </div>
             </a>
@@ -166,6 +167,7 @@
         </div>
     </div>
 
+    <script src="i18n.js"></script>
     <script src="theme.js"></script>
     <script src="script.js"></script>
 </body>

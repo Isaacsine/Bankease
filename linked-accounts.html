@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bankease - Linked Accounts</title>
+    <link rel="icon" type="image/png" href="assets/iconLogo.png" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/responsive.css" />
+    <style>
+        .linked-page {
+            padding: 28px 16px 104px;
+            max-width: 760px;
+            margin: 0 auto;
+        }
+
+        .linked-heading {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .back-link {
+            color: #1a1a2e;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            font-size: 15px;
+            flex-shrink: 0;
+        }
+
+        .linked-heading h2 {
+            color: #1a1a2e;
+            font-size: 25px;
+            line-height: 1.15;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 0;
+        }
+
+        .linked-heading p {
+            color: #7b7b8d;
+            font-size: 14px;
+            line-height: 1.5;
+            margin: 6px 0 0;
+        }
+
+        .linked-card,
+        .linked-form {
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 5px 18px rgba(26, 26, 46, 0.06);
+            padding: 20px;
+            margin-bottom: 18px;
+        }
+
+        .accounts-section-heading h3,
+        .linked-form h3 {
+            color: #1a1a2e;
+            font-size: 17px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 0;
+        }
+
+        .accounts-section-heading,
+        .account-count {
+            display: block;
+        }
+
+        .accounts-section-heading {
+            margin: 0 0 10px;
+        }
+
+        .accounts-section-heading h3 {
+            margin: 0;
+        }
+
+        .account-count {
+            color: #7b7b8d;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        #accountList {
+            display: block;
+            width: 100%;
+        }
+
+        .linked-account {
+            display: grid;
+            grid-template-columns: 44px minmax(0, 1fr) auto;
+            grid-template-areas:
+                "mark info remove"
+                "mark balance remove";
+            align-items: center;
+            gap: 12px;
+            padding: 16px 0;
+            border-top: 1px solid #f0f1f4;
+        }
+
+        .linked-account:first-of-type {
+            border-top: 0;
+        }
+
+        .account-mark {
+            grid-area: mark;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: #e67e22;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .account-mark img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 12px;
+            background: #fff;
+        }
+
+        .account-info {
+            grid-area: info;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .account-name {
+            color: #1a1a2e;
+            font-weight: 700;
+            font-size: 15px;
+            line-height: 1.25;
+        }
+
+        .account-details,
+        .account-balance {
+            color: #7b7b8d;
+            font-size: 12px;
+            line-height: 1.35;
+            margin-top: 4px;
+        }
+
+        .account-balance {
+            grid-area: balance;
+            color: #1a1a2e;
+            font-weight: 700;
+            font-size: 13px;
+            text-align: left;
+            white-space: nowrap;
+        }
+
+        .remove-account {
+            grid-area: remove;
+            border: 0;
+            background: transparent;
+            color: #e74c3c;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 9px;
+            border-radius: 9px;
+            transition: background 0.2s;
+        }
+
+        .remove-account:hover {
+            background: #fff0ee;
+        }
+
+        .remove-account:disabled {
+            cursor: wait;
+            opacity: 0.5;
+        }
+
+        .linked-form h3 {
+            margin-bottom: 18px;
+        }
+
+        .linked-form label {
+            display: block;
+            color: #1a1a2e;
+            font-size: 13px;
+            font-weight: 600;
+            margin: 0 0 7px;
+        }
+
+        .linked-form input,
+        .linked-form select {
+            width: 100%;
+            box-sizing: border-box;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            padding: 10px 14px;
+            font: inherit;
+            font-size: 14px;
+            background: #fafafa;
+            color: #1a1a2e;
+            transition: border 0.2s, box-shadow 0.2s;
+        }
+
+        .linked-form input:focus,
+        .linked-form select:focus {
+            border-color: #e67e22;
+            box-shadow: 0 0 0 3px rgba(230, 126, 34, 0.12);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px 12px;
+        }
+
+        .form-field {
+            min-width: 0;
+        }
+
+        .form-field:first-child {
+            grid-column: 1 / -1;
+        }
+
+        .linked-submit {
+            width: 100%;
+            border: 0;
+            border-radius: 30px;
+            background: #1a1a2e;
+            color: #fff;
+            cursor: pointer;
+            font-weight: 700;
+            margin-top: 18px;
+            padding: 12px 24px;
+            transition: opacity 0.2s, transform 0.2s;
+        }
+
+        .linked-submit:hover {
+            opacity: 0.9;
+        }
+
+        .linked-submit:active {
+            transform: translateY(1px);
+        }
+
+        .form-message {
+            font-size: 13px;
+            margin: 12px 0 0;
+            min-height: 18px;
+        }
+
+        .form-message.error { color: #e74c3c; }
+        .form-message.success { color: #27ae60; }
+
+        .empty-state {
+            color: #7b7b8d;
+            font-size: 14px;
+            line-height: 1.5;
+            padding: 16px 0 4px;
+            text-align: left;
+        }
+
+        html.dark-mode .back-link,
+        html.dark-mode .linked-card,
+        html.dark-mode .linked-form {
+            background: #182631;
+            color: #edf2f4;
+            box-shadow: 0 5px 18px rgba(0, 0, 0, 0.2);
+        }
+
+        html.dark-mode .back-link,
+        html.dark-mode .linked-heading h2,
+        html.dark-mode .accounts-section-heading h3,
+        html.dark-mode .linked-form h3,
+        html.dark-mode .account-name,
+        html.dark-mode .account-balance,
+        html.dark-mode .linked-form label {
+            color: #edf2f4;
+        }
+
+        html.dark-mode .linked-heading p,
+        html.dark-mode .account-count,
+        html.dark-mode .account-details,
+        html.dark-mode .empty-state {
+            color: #aebdc7;
+        }
+
+        html.dark-mode .linked-account {
+            border-color: #2b3b47;
+        }
+
+        @media (max-width: 480px) {
+            .form-grid { display: block; }
+
+            .linked-account {
+                grid-template-columns: 40px minmax(0, 1fr) auto;
+                grid-template-areas:
+                    "mark info remove"
+                    "mark balance remove";
+                gap: 8px 10px;
+            }
+
+            .account-mark {
+                width: 40px;
+                height: 40px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app">
+        <div class="header">
+            <a class="logo-wrapper" href="dashboard.html" aria-label="Go to dashboard">
+                <img class="logo-icon" src="assets/bankeaseLogo.png" alt="Bankease icon">
+                <div>
+                    <div class="logo-text">BANKE<span class="highlight">ASE</span></div>
+                    <div class="logo-tagline">ONE CARD. ALL BANKS.</div>
+                </div>
+            </a>
+            <div class="header-actions"><a href="notifications.html" aria-label="View notifications"><i class="fas fa-bell"></i></a><a href="settings.html" aria-label="Open settings"><i class="fas fa-cog"></i></a></div>
+        </div>
+
+        <main class="linked-page">
+            <div class="linked-heading">
+                <a class="back-link" href="settings.html" aria-label="Back to settings"><i class="fas fa-arrow-left"></i></a>
+                <div>
+                    <h2>Linked accounts</h2>
+                    <p>Add accounts for your Bankease SmartCard or remove ones you no longer use.</p>
+                </div>
+            </div>
+
+            <div class="accounts-section-heading">
+                <h3 id="accountsTitle">YOUR ACCOUNTS</h3>
+                <span class="account-count" id="accountCount">Loading...</span>
+            </div>
+
+            <section class="linked-card" aria-labelledby="accountsTitle">
+                <div id="accountList" aria-live="polite"></div>
+            </section>
+
+            <form class="linked-form" id="addAccountForm">
+                <h3>ADD A LINKED ACCOUNT</h3>
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label for="bankName">Bank</label>
+                        <select id="bankName" name="name">
+                        <option>FNB</option>
+                        <option>Capitec</option>
+                        <option>Absa</option>
+                        <option>Nedbank</option>
+                        <option>Standard Bank</option>
+                        <option>TymeBank</option>
+                        <option>Bank Zero</option>
+                        </select>
+                    </div>
+                    <div class="form-field">
+                        <label for="accountNumber">Account or card number</label>
+                        <input id="accountNumber" name="accountNumber" type="text" inputmode="numeric" autocomplete="off" placeholder="e.g. 1234 5678 9012 3456" required />
+                    </div>
+                    <div class="form-field">
+                        <label for="accountType">Account type</label>
+                        <select id="accountType" name="accountType">
+                        <option value="cheque">Cheque Account</option>
+                        <option value="savings">Savings</option>
+                        <option value="credit">Credit Card</option>
+                        <option value="investment">Investment</option>
+                        </select>
+                    </div>
+                    <div class="form-field">
+                        <label for="balance">Current balance (R)</label>
+                        <input id="balance" name="balance" type="number" min="0" step="0.01" value="0" />
+                    </div>
+                </div>
+                <button class="linked-submit" type="submit"><i class="fas fa-plus"></i> Link account</button>
+                <div class="form-message" id="formMessage" role="status"></div>
+            </form>
+        </main>
+
+        <div class="bottom-nav">
+            <button class="nav-item" onclick="location.href='dashboard.html'"><i class="fas fa-th"></i> Dashboard</button>
+            <button class="nav-item" onclick="location.href='accounts.html'"><i class="fas fa-wallet"></i> Accounts</button>
+            <button class="nav-item active"><i class="fas fa-user-cog"></i> Settings</button>
+        </div>
+    </div>
+
+    <script src="i18n.js"></script>
+    <script src="theme.js"></script>
+    <script>
+        const accountList = document.getElementById('accountList');
+        const accountCount = document.getElementById('accountCount');
+        const form = document.getElementById('addAccountForm');
+        const formMessage = document.getElementById('formMessage');
+        const bankLogos = {
+            'FNB': 'assets/fnblogo.png',
+            'Capitec': 'assets/capitec.jpg',
+            'Absa': 'assets/absa-bank%20logo.png',
+            'Nedbank': 'assets/nedbank.png',
+            'Standard Bank': 'assets/standardbank.jpg',
+            'TymeBank': 'assets/tynebank.png'
+        };
+
+        function showMessage(text, type) {
+            formMessage.textContent = text;
+            formMessage.className = 'form-message ' + (type || '');
+        }
+
+        function renderBankMark(bank) {
+            const logo = bankLogos[bank.name];
+            return logo ? '<img src="' + logo + '" alt="' + bank.name + ' logo">' : bank.name.charAt(0);
+        }
+
+        function renderAccounts(banks) {
+            accountCount.textContent = banks.length + (banks.length === 1 ? ' account' : ' accounts');
+            if (!banks.length) {
+                accountList.innerHTML = '<div class="empty-state">No linked accounts yet. Add your first account below.</div>';
+                return;
+            }
+            accountList.innerHTML = banks.map(bank => `
+                <div class="linked-account">
+                    <div class="account-mark" aria-label="${bank.name} logo">${renderBankMark(bank)}</div>
+                    <div class="account-info">
+                        <div class="account-name">${bank.name}</div>
+                        <div class="account-details">${bank.account_type} | **** ${bank.last_digits}</div>
+                    </div>
+                    <div class="account-balance">R${Number(bank.balance).toFixed(2)}</div>
+                    <button class="remove-account" data-id="${bank.id}" aria-label="Remove ${bank.name} account" title="Remove account"><i class="fas fa-trash-alt"></i></button>
+                </div>`).join('');
+            accountList.querySelectorAll('.remove-account').forEach(button => button.addEventListener('click', () => removeAccount(button)));
+        }
+
+        async function loadAccounts() {
+            const response = await fetch('/api/banks', { credentials: 'same-origin' });
+            if (!response.ok) {
+                window.location.href = 'login.html';
+                return;
+            }
+            const result = await response.json();
+            renderAccounts(result.banks);
+        }
+
+        async function removeAccount(button) {
+            const account = button.closest('.linked-account').querySelector('.account-name').textContent;
+            if (!window.confirm('Remove your linked ' + account + ' account?')) return;
+            button.disabled = true;
+            const response = await fetch('/api/banks/' + encodeURIComponent(button.dataset.id), { method: 'DELETE', credentials: 'same-origin' });
+            if (!response.ok) {
+                const result = await response.json().catch(() => ({}));
+                button.disabled = false;
+                showMessage(result.error || 'Could not remove account.', 'error');
+                return;
+            }
+            showMessage(account + ' account removed.', 'success');
+            await loadAccounts();
+        }
+
+        form.addEventListener('submit', async event => {
+            event.preventDefault();
+            const submit = form.querySelector('button[type="submit"]');
+            submit.disabled = true;
+            showMessage('Linking account...', '');
+            const payload = Object.fromEntries(new FormData(form));
+            try {
+                const response = await fetch('/api/banks', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'same-origin',
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.error || 'Could not link account.');
+                form.reset();
+                document.getElementById('balance').value = '0';
+                showMessage(result.bank.name + ' account linked successfully.', 'success');
+                await loadAccounts();
+            } catch (error) {
+                showMessage(error.message, 'error');
+            } finally {
+                submit.disabled = false;
+            }
+        });
+
+        loadAccounts().catch(() => { window.location.href = 'login.html'; });
+    </script>
+</body>
+
+</html>

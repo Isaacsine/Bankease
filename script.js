@@ -107,7 +107,7 @@
         if (totalBalanceEl) totalBalanceEl.textContent = formatCurrency(total);
         if (accountCountEl) accountCountEl.textContent = 'Across ' + banks.length + ' accounts';
         const active = banks.find(b => b.id === selectedId);
-        if (activeBankNameEl) activeBankNameEl.textContent = active ? active.name + ' **** ' + active.lastDigits : '—';
+        if (activeBankNameEl) activeBankNameEl.textContent = active ? active.name + ' **** ' + active.lastDigits : 'â€”';
     }
 
     function getActiveBank() {
@@ -179,7 +179,7 @@
                 </div>
                 
                 <div style="font-size:13px;color:#7b7b8d;margin-bottom:12px;">
-                    Use ${bank.name} with your Bankees SmartCard
+                    Use ${bank.name} with your Bankease SmartCard
                 </div>
                 
                 <div class="bank-detail-actions">
@@ -342,12 +342,12 @@
         const amount = parseFloat(document.getElementById('transferAmount').value);
 
         if (fromId === toId) {
-            transferMsg.textContent = '❌ Cannot transfer to same bank.';
+            transferMsg.textContent = 'âŒ Cannot transfer to same bank.';
             transferMsg.style.color = '#e74c3c';
             return;
         }
         if (!amount || amount <= 0) {
-            transferMsg.textContent = '❌ Enter a valid amount.';
+            transferMsg.textContent = 'âŒ Enter a valid amount.';
             transferMsg.style.color = '#e74c3c';
             return;
         }
@@ -356,12 +356,12 @@
         const toBank = banks.find(b => b.id === toId);
 
         if (!fromBank || !toBank) {
-            transferMsg.textContent = '❌ Bank not found.';
+            transferMsg.textContent = 'âŒ Bank not found.';
             transferMsg.style.color = '#e74c3c';
             return;
         }
         if (fromBank.balance < amount) {
-            transferMsg.textContent = '❌ Insufficient balance in ' + fromBank.name;
+            transferMsg.textContent = 'âŒ Insufficient balance in ' + fromBank.name;
             transferMsg.style.color = '#e74c3c';
             return;
         }
@@ -373,11 +373,11 @@
         });
         const result = await response.json();
         if (!response.ok) {
-            transferMsg.textContent = '❌ ' + (result.error || 'Transfer failed.');
+            transferMsg.textContent = 'âŒ ' + (result.error || 'Transfer failed.');
             transferMsg.style.color = '#e74c3c';
             return;
         }
-        transferMsg.textContent = '✅ Transfer completed successfully.';
+        transferMsg.textContent = 'âœ… Transfer completed successfully.';
         transferMsg.style.color = '#27ae60';
         await loadUserData();
         populateTransferSelects();
@@ -392,24 +392,24 @@
         const bankId = document.getElementById('airtimeBank').value;
 
         if (!phone) {
-            airtimeMsg.textContent = '❌ Enter a cellphone number.';
+            airtimeMsg.textContent = 'âŒ Enter a cellphone number.';
             airtimeMsg.style.color = '#e74c3c';
             return;
         }
         if (!amount || amount <= 0) {
-            airtimeMsg.textContent = '❌ Enter a valid amount.';
+            airtimeMsg.textContent = 'âŒ Enter a valid amount.';
             airtimeMsg.style.color = '#e74c3c';
             return;
         }
 
         const bank = banks.find(b => b.id === bankId);
         if (!bank) {
-            airtimeMsg.textContent = '❌ Bank not found.';
+            airtimeMsg.textContent = 'âŒ Bank not found.';
             airtimeMsg.style.color = '#e74c3c';
             return;
         }
         if (bank.balance < amount) {
-            airtimeMsg.textContent = '❌ Insufficient balance in ' + bank.name;
+            airtimeMsg.textContent = 'âŒ Insufficient balance in ' + bank.name;
             airtimeMsg.style.color = '#e74c3c';
             return;
         }
@@ -423,7 +423,7 @@
             icon: 'fa-phone-alt'
         });
 
-        airtimeMsg.textContent = '✅ Airtime for ' + network + ' (' + phone + ') purchased successfully!';
+        airtimeMsg.textContent = 'âœ… Airtime for ' + network + ' (' + phone + ') purchased successfully!';
         airtimeMsg.style.color = '#27ae60';
         renderAll();
         populateAirtimeBankSelect();
@@ -439,10 +439,10 @@
             renderAll();
             const msg = document.querySelector('#settingsPage p');
             if (msg) {
-                msg.textContent = '✅ Settings saved! Default bank updated to ' + banks.find(b => b.id === defaultBankId)?.name;
+                msg.textContent = 'âœ… Settings saved! Default bank updated to ' + banks.find(b => b.id === defaultBankId)?.name;
                 msg.style.color = '#27ae60';
                 setTimeout(() => {
-                    msg.textContent = 'Manage your Bankees preferences.';
+                    msg.textContent = 'Manage your Bankease preferences.';
                     msg.style.color = '#7b7b8d';
                 }, 3000);
             }

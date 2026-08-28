@@ -9,6 +9,16 @@ create table if not exists public.users (
     created_at timestamptz not null default now()
 );
 
+create table if not exists public.password_reset_tokens (
+    id uuid primary key default gen_random_uuid(),
+    user_id uuid not null references public.users(id) on delete cascade,
+    token_hash text not null unique,
+    expires_at timestamptz not null,
+    created_at timestamptz not null default now()
+);
+
+alter table public.password_reset_tokens enable row level security;
+
 create table if not exists public.banks (
     id uuid primary key default gen_random_uuid(),
     user_id uuid not null references public.users(id) on delete cascade,
@@ -33,6 +43,8 @@ create table if not exists public.transactions (
 
 create index if not exists banks_user_id_idx on public.banks(user_id);
 create index if not exists transactions_user_id_idx on public.transactions(user_id);
+create index if not exists password_reset_tokens_user_id_idx on public.password_reset_tokens(user_id);
+create index if not exists password_reset_tokens_expires_at_idx on public.password_reset_tokens(expires_at);
 create unique index if not exists users_email_lower_idx on public.users(lower(email));
 create unique index if not exists banks_user_name_idx on public.banks(user_id, name);
 

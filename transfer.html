@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bankees - Transfer</title>
+    <title>Bankease - Transfer</title>
+    <link rel="icon" type="image/png" href="assets/iconLogo.png" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/responsive.css">
@@ -11,7 +12,7 @@
 <body>
     <div class="app">
         <div class="header">
-            <a class="logo-wrapper" href="dashboard.html" aria-label="Go to dashboard"><div class="logo-icon">B</div><div><div class="logo-text">BANKE<span class="highlight">ASE</span></div><div class="logo-tagline">ONE CARD. ALL BANKS.</div></div></a>
+            <a class="logo-wrapper" href="dashboard.html" aria-label="Go to dashboard"><img class="logo-icon" src="assets/bankeaseLogo.png" alt="Bankease icon"><div><div class="logo-text">BANKE<span class="highlight">ASE</span></div><div class="logo-tagline">ONE CARD. ALL BANKS.</div></div></a>
             <div class="header-actions"><a href="dashboard.html" aria-label="Back to dashboard"><i class="fas fa-arrow-left"></i></a></div>
         </div>
         <div class="page-title-block"><h2>Transfer Money</h2><p>Move money securely between your linked banks.</p></div>
@@ -34,6 +35,7 @@
             <button class="nav-item" data-route="settings.html"><i class="fas fa-user-cog"></i> Settings</button>
         </div>
     </div>
+    <script src="i18n.js"></script>
     <script src="theme.js"></script>
     <script>
         const fromBank = document.getElementById('fromBank');

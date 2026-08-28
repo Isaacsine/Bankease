@@ -4,7 +4,8 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Bankees – Settings</title>
+    <title>Bankease â€“ Settings</title>
+    <link rel="icon" type="image/png" href="assets/iconLogo.png" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/responsive.css" />
@@ -128,6 +129,7 @@
             position: absolute;
             top: 20px;
             right: 20px;
+            text-decoration: none;
         }
 
         .settings-row {
@@ -291,22 +293,22 @@
         <!-- HEADER -->
         <div class="header">
             <a class="logo-wrapper" href="dashboard.html" aria-label="Go to dashboard">
-                <div class="logo-icon">B</div>
+                <img class="logo-icon" src="assets/bankeaseLogo.png" alt="Bankease icon">
                 <div>
                     <div class="logo-text">BANKE<span class="highlight">ASE</span></div>
                     <div class="logo-tagline">ONE CARD. ALL BANKS.</div>
                 </div>
             </a>
             <div class="header-actions">
-                <i class="fas fa-search"></i>
-                <i class="fas fa-bell"></i>
+                <a href="notifications.html" aria-label="View notifications"><i class="fas fa-bell"></i></a>
+                <a href="settings.html" aria-label="Open settings"><i class="fas fa-cog"></i></a>
             </div>
         </div>
 
         <!-- PAGE TITLE -->
         <div class="settings-page-title">
             <h2>Settings</h2>
-            <p>Manage your Bankees preferences and account settings.</p>
+            <p>Manage your Bankease preferences and account settings.</p>
         </div>
 
         <div class="settings-content">
@@ -323,7 +325,7 @@
                             <span class="profile-badge premium">Premium</span>
                         </div>
                     </div>
-                    <button class="profile-edit-btn">Edit</button>
+                    <a class="profile-edit-btn" href="profile.html">Edit</a>
                 </div>
             </div>
 
@@ -357,8 +359,8 @@
                     <select class="settings-select short" title="Currency" aria-label="Currency">
                         <option selected>ZAR (R)</option>
                         <option>USD ($)</option>
-                        <option>EUR (€)</option>
-                        <option>GBP (£)</option>
+                        <option>EUR (â‚¬)</option>
+                        <option>GBP (Â£)</option>
                     </select>
                 </div>
 
@@ -368,7 +370,7 @@
                         <div class="settings-label">Language</div>
                         <div class="settings-subtext">Choose your preferred language</div>
                     </div>
-                    <select class="settings-select" title="Language" aria-label="Language">
+                    <select class="settings-select" title="Language" aria-label="Language" data-language-select>
                         <option selected>English</option>
                         <option>Afrikaans</option>
                         <option>isiZulu</option>
@@ -398,13 +400,13 @@
                 </div>
 
                 <!-- Change Password -->
-                <button class="settings-row compact" onclick="alert('Help Center is coming soon.')">
+                <a class="settings-row compact" href="change-password.html">
                     <div>
                         <div class="settings-label"><i class="fas fa-key settings-icon"></i> Change Password</div>
                         <div class="settings-subtext">Update your login password</div>
                     </div>
                     <i class="fas fa-chevron-right settings-chevron"></i>
-                </button>
+                </a>
 
                 <!-- Biometric Login -->
                 <div class="settings-row">
@@ -490,7 +492,7 @@
                 </div>
 
                 <!-- Linked Cards -->
-                <a class="settings-row compact" href="mailto:support@bankees.co.za">
+                <a class="settings-row compact" href="cards.html">
                     <div>
                         <div class="settings-label"><i class="fas fa-credit-card settings-icon"></i> Manage Cards</div>
                         <div class="settings-subtext">Add or remove linked cards</div>
@@ -499,7 +501,7 @@
                 </a>
 
                 <!-- Bank Accounts -->
-                <a class="settings-row compact" href="tel:0861226533">
+                <a class="settings-row compact" href="linked-accounts.html">
                     <div>
                         <div class="settings-label"><i class="fas fa-university settings-icon"></i> Bank Accounts</div>
                         <div class="settings-subtext">Manage linked bank accounts</div>
@@ -554,7 +556,7 @@
                 </div>
 
                 <!-- Cache & Storage -->
-                <button class="settings-row compact" onclick="alert('Privacy Policy will be available soon.')">
+                <a class="settings-row compact" href="privacy.html">
                     <div>
                         <div class="settings-label"><i class="fas fa-database settings-icon"></i> Cache & Storage</div>
                         <div class="settings-subtext">Clear cache (12.5 MB used)</div>
@@ -563,7 +565,7 @@
                         <span>12.5 MB</span>
                         <i class="fas fa-chevron-right settings-chevron"></i>
                     </div>
-                </button>
+                </a>
             </div>
 
             <!-- SUPPORT -->
@@ -572,37 +574,37 @@
                     <h4>Support</h4>
                 </div>
 
-                <button class="settings-row compact" onclick="alert('Terms of Service will be available soon.')">
+                <a class="settings-row compact" href="help.html">
                     <div>
                         <div class="settings-label"><i class="fas fa-question-circle settings-icon"></i> Help Center</div>
                         <div class="settings-subtext">FAQs and guides</div>
                     </div>
                     <i class="fas fa-chevron-right settings-chevron"></i>
-                </button>
+                </a>
 
-                <div class="settings-row compact">
+                <a class="settings-row compact" href="mailto:support@bankees.co.za">
                     <div>
                         <div class="settings-label"><i class="fas fa-comment settings-icon"></i> Live Chat</div>
                         <div class="settings-subtext">Chat with support agent</div>
                     </div>
                     <span class="settings-status">Online</span>
-                </div>
+                </a>
 
-                <div class="settings-row compact">
+                <a class="settings-row compact" href="mailto:support@bankees.co.za">
                     <div>
                         <div class="settings-label"><i class="fas fa-envelope settings-icon"></i> Email Support</div>
                         <div class="settings-subtext">support@bankees.co.za</div>
                     </div>
                     <i class="fas fa-chevron-right settings-chevron"></i>
-                </div>
+                </a>
 
-                <div class="settings-row compact">
+                <a class="settings-row compact" href="tel:0861226533">
                     <div>
                         <div class="settings-label"><i class="fas fa-phone settings-icon"></i> Call Support</div>
                         <div class="settings-subtext">0861 226 533</div>
                     </div>
                     <i class="fas fa-chevron-right settings-chevron"></i>
-                </div>
+                </a>
             </div>
 
             <!-- LEGAL -->
@@ -611,26 +613,26 @@
                     <h4>Legal</h4>
                 </div>
 
-                <div class="settings-row compact">
+                <a class="settings-row compact" href="privacy.html">
                     <div>
                         <div class="settings-label">Privacy Policy</div>
                     </div>
                     <i class="fas fa-chevron-right settings-chevron"></i>
-                </div>
+                </a>
 
-                <div class="settings-row compact">
+                <a class="settings-row compact" href="terms.html">
                     <div>
                         <div class="settings-label">Terms of Service</div>
                     </div>
                     <i class="fas fa-chevron-right settings-chevron"></i>
-                </div>
+                </a>
 
-                <button class="settings-legal-row" onclick="alert('Bankees SmartCard management platform.')">
+                <a class="settings-legal-row" href="about.html">
                     <div>
-                        <div class="settings-label">About Bankees</div>
+                        <div class="settings-label">About Bankease</div>
                     </div>
                     <i class="fas fa-chevron-right settings-chevron"></i>
-                </button>
+                </a>
             </div>
 
             <!-- SIGN OUT -->
@@ -639,7 +641,7 @@
             </button>
 
             <div class="settings-version">
-                Version 2.4.1 • Bankees SmartCard
+                Version 2.4.1 â€¢ Bankease SmartCard
             </div>
         </div>
 
@@ -655,6 +657,7 @@
         </div>
         <div class="bottom-space"></div>
     </div>
+    <script src="i18n.js"></script>
     <script src="theme.js"></script>
     <script>
         fetch('/api/me').then(response => {

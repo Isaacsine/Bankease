@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bankease - Notifications</title>
+    <link rel="icon" type="image/png" href="assets/iconLogo.png" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/responsive.css" />
+    <style>
+        .info-page { padding: 28px 16px 104px; max-width: 760px; margin: 0 auto; }
+        .info-heading { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 24px; }
+        .info-heading h2 { margin: 0; color: #1a1a2e; font-size: 24px; }
+        .info-heading p { margin: 6px 0 0; color: #7b7b8d; font-size: 14px; }
+        .info-back { color: #1a1a2e; font-size: 18px; padding-top: 3px; }
+        .info-card { background: #fff; border-radius: 16px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,.05); }
+        .notification { padding: 14px 0; border-bottom: 1px solid #f0f1f4; display: flex; gap: 12px; }
+        .notification:last-child { border-bottom: 0; }
+        .notification i { color: #e67e22; width: 20px; padding-top: 2px; }
+        .notification strong { display: block; color: #1a1a2e; font-size: 14px; }
+        .notification span { color: #7b7b8d; font-size: 12px; }
+        html.dark-mode .info-heading h2, html.dark-mode .info-back, html.dark-mode .notification strong { color: #edf2f4; }
+        html.dark-mode .info-heading p, html.dark-mode .notification span { color: #aebdc7; }
+        html.dark-mode .info-card { background: #182631; }
+        html.dark-mode .notification { border-color: #2b3b47; }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <div class="header"><a class="logo-wrapper" href="dashboard.html" aria-label="Go to dashboard"><img class="logo-icon" src="assets/bankeaseLogo.png" alt="Bankease icon"><div><div class="logo-text">BANKE<span class="highlight">ASE</span></div><div class="logo-tagline">ONE CARD. ALL BANKS.</div></div></a><div class="header-actions"><a href="settings.html" aria-label="Open settings"><i class="fas fa-cog"></i></a></div></div>
+        <main class="info-page"><div class="info-heading"><a class="info-back" href="dashboard.html" aria-label="Back to dashboard"><i class="fas fa-arrow-left"></i></a><div><h2>Notifications</h2><p>Updates about your accounts and activity.</p></div></div>
+            <section class="info-card"><div class="notification"><i class="fas fa-shield-alt"></i><div><strong>Your account is secure</strong><span>No security alerts require your attention.</span></div></div><div class="notification"><i class="fas fa-bell"></i><div><strong>Transaction alerts are ready</strong><span>Review recent activity from the Accounts page.</span></div></div></section>
+        </main>
+        <div class="bottom-nav"><button class="nav-item" onclick="location.href='dashboard.html'"><i class="fas fa-th"></i> Dashboard</button><button class="nav-item" onclick="location.href='accounts.html'"><i class="fas fa-wallet"></i> Accounts</button><button class="nav-item" onclick="location.href='analytics.html'"><i class="fas fa-chart-pie"></i> Analytics</button><button class="nav-item" onclick="location.href='settings.html'"><i class="fas fa-user-cog"></i> Settings</button></div>
+    </div>
+    <script src="theme.js"></script>
+</body>
+</html>

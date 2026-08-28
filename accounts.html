@@ -4,7 +4,8 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Bankees – Accounts</title>
+    <title>Bankease – Accounts</title>
+    <link rel="icon" type="image/png" href="assets/iconLogo.png" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/responsive.css" />
@@ -282,6 +283,22 @@
                 font-size: 12px;
             }
         }
+
+        .empty-accounts {
+            background: #fff;
+            border-radius: 16px;
+            padding: 20px;
+            color: #7b7b8d;
+            text-align: center;
+        }
+
+        .account-item-detail .icon img {
+            width: 48px;
+            height: 48px;
+            object-fit: contain;
+            border-radius: 14px;
+            background: #fff;
+        }
     </style>
 </head>
 
@@ -290,15 +307,15 @@
         <!-- HEADER -->
         <div class="header">
             <a class="logo-wrapper" href="dashboard.html" aria-label="Go to dashboard">
-                <div class="logo-icon">B</div>
+                <img class="logo-icon" src="assets/bankeaseLogo.png" alt="Bankease icon">
                 <div>
-                    <div class="logo-text">BANKE<span class="highlight">ASE</span></div>
+                    <div class="logo-text">Bankease</div>
                     <div class="logo-tagline">ONE CARD. ALL BANKS.</div>
                 </div>
             </a>
             <div class="header-actions">
-                <i class="fas fa-search"></i>
-                <i class="fas fa-bell"></i>
+                <a href="notifications.html" aria-label="View notifications"><i class="fas fa-bell"></i></a>
+                <a href="settings.html" aria-label="Open settings"><i class="fas fa-cog"></i></a>
             </div>
         </div>
 
@@ -321,15 +338,15 @@
                         <div class="label">Accounts</div>
                     </div>
                     <div class="stat">
-                        <div class="number">3</div>
+                        <div class="number" id="activeCount">0</div>
                         <div class="label">Active</div>
                     </div>
                     <div class="stat">
-                        <div class="number">1</div>
+                        <div class="number" id="inactiveCount">0</div>
                         <div class="label">Inactive</div>
                     </div>
                     <div class="stat">
-                        <div class="number">2</div>
+                        <div class="number" id="cardsCount">0</div>
                         <div class="label">Cards</div>
                     </div>
                 </div>
@@ -358,84 +375,17 @@
 
             <!-- Filter -->
             <div class="account-filter">
-                <button class="account-filter-btn active">All</button>
-                <button class="account-filter-btn">Active</button>
-                <button class="account-filter-btn">Inactive</button>
-                <button class="account-filter-btn">Cheque</button>
-                <button class="account-filter-btn">Savings</button>
-                <button class="account-filter-btn">Credit</button>
+                <button class="account-filter-btn active" data-filter="all">All</button>
+                <button class="account-filter-btn" data-filter="active">Active</button>
+                <button class="account-filter-btn" data-filter="inactive">Inactive</button>
+                <button class="account-filter-btn" data-filter="cheque">Cheque</button>
+                <button class="account-filter-btn" data-filter="savings">Savings</button>
+                <button class="account-filter-btn" data-filter="credit">Credit</button>
             </div>
 
             <!-- Account List -->
             <div class="account-list-section" id="accountList">
-                <div class="account-list-header">
-                    <h4>Linked Accounts</h4>
-                    <span>4 accounts</span>
-                </div>
-
-                <!-- Account 1 - FNB -->
-                <div class="account-item-detail" onclick="location.href='dashboard.html'">
-                    <div class="left">
-                        <div class="icon fnb">F</div>
-                        <div class="info">
-                            <div class="name">FNB</div>
-                            <div class="number">•••• 4589</div>
-                            <div class="type">Cheque Account</div>
-                        </div>
-                    </div>
-                    <div class="right">
-                        <div class="balance">R8,250.00</div>
-                        <div class="status active">Active</div>
-                    </div>
-                </div>
-
-                <!-- Account 2 - Capitec -->
-                <div class="account-item-detail" onclick="location.href='dashboard.html'">
-                    <div class="left">
-                        <div class="icon capitec">C</div>
-                        <div class="info">
-                            <div class="name">Capitec</div>
-                            <div class="number">•••• 1234</div>
-                            <div class="type">Savings</div>
-                        </div>
-                    </div>
-                    <div class="right">
-                        <div class="balance">R3,200.00</div>
-                        <div class="status active">Active</div>
-                    </div>
-                </div>
-
-                <!-- Account 3 - Absa -->
-                <div class="account-item-detail" onclick="location.href='dashboard.html'">
-                    <div class="left">
-                        <div class="icon absa">A</div>
-                        <div class="info">
-                            <div class="name">Absa</div>
-                            <div class="number">•••• 7890</div>
-                            <div class="type">Credit Card</div>
-                        </div>
-                    </div>
-                    <div class="right">
-                        <div class="balance">R1,000.00</div>
-                        <div class="status inactive">Inactive</div>
-                    </div>
-                </div>
-
-                <!-- Account 4 - Nedbank -->
-                <div class="account-item-detail" onclick="location.href='dashboard.html'">
-                    <div class="left">
-                        <div class="icon nedbank">N</div>
-                        <div class="info">
-                            <div class="name">Nedbank</div>
-                            <div class="number">•••• 5678</div>
-                            <div class="type">Savings</div>
-                        </div>
-                    </div>
-                    <div class="right">
-                        <div class="balance">R110.00</div>
-                        <div class="status pending">Pending</div>
-                    </div>
-                </div>
+                <div class="account-list-header"><h4>Linked Accounts</h4><span>Loading...</span></div>
             </div>
 
             <!-- Recent Transactions by Account -->
@@ -445,38 +395,7 @@
                     <a href="transaction.html">View All</a>
                 </div>
 
-                <div class="recent-item">
-                    <div class="left">
-                        <div class="icon"><i class="fas fa-shopping-bag"></i></div>
-                        <div class="info">
-                            <div class="desc">Spar - FNB</div>
-                            <div class="date">Today, 14:32</div>
-                        </div>
-                    </div>
-                    <div class="amount negative">-R245.50</div>
-                </div>
-
-                <div class="recent-item">
-                    <div class="left">
-                        <div class="icon"><i class="fas fa-wallet"></i></div>
-                        <div class="info">
-                            <div class="desc">Salary - Capitec</div>
-                            <div class="date">Yesterday, 09:00</div>
-                        </div>
-                    </div>
-                    <div class="amount positive">+R12,500.00</div>
-                </div>
-
-                <div class="recent-item">
-                    <div class="left">
-                        <div class="icon"><i class="fas fa-exchange-alt"></i></div>
-                        <div class="info">
-                            <div class="desc">Transfer to FNB</div>
-                            <div class="date">Dec 14, 2024</div>
-                        </div>
-                    </div>
-                    <div class="amount negative">-R1,000.00</div>
-                </div>
+                <div id="recentActivityList"><p>No activity recorded yet.</p></div>
             </div>
 
             <!-- Add Account Button -->
@@ -537,6 +456,7 @@
         </div>
     </div>
 
+    <script src="i18n.js"></script>
     <script src="theme.js"></script>
     <script>
         // Modal toggle functionality
@@ -546,11 +466,63 @@
             }
         });
 
-        // Filter buttons
+        let allBanks = [];
+        let allTransactions = [];
+        let activeFilter = 'all';
+        const bankLogos = {
+            'FNB': 'assets/fnblogo.png',
+            'Capitec': 'assets/capitec.jpg',
+            'Absa': 'assets/absa-bank%20logo.png',
+            'Nedbank': 'assets/nedbank.png',
+            'Standard Bank': 'assets/standardbank.jpg',
+            'TymeBank': 'assets/tynebank.png'
+        };
+
+        const money = value => 'R' + Number(value || 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        const escapeHtml = value => String(value).replace(/[&<>'"]/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character]));
+        const bankTransactions = bankId => allTransactions.filter(transaction => transaction.from_bank_id === bankId || transaction.to_bank_id === bankId);
+        const isActive = bank => Number(bank.balance) > 0 || bankTransactions(bank.id).length > 0;
+        const displayType = type => String(type || 'savings').replace(/^./, letter => letter.toUpperCase()) + (type === 'cheque' ? ' Account' : type === 'credit' ? ' Card' : '');
+
+        function renderBankIcon(bank) {
+            const logo = bankLogos[bank.name];
+            return logo ? '<img src="' + logo + '" alt="' + escapeHtml(bank.name) + ' logo" style="width:48px;height:48px;object-fit:contain;border-radius:14px;background:#fff;">' : escapeHtml(bank.name.charAt(0));
+        }
+
+        function renderAccounts() {
+            const filteredBanks = allBanks.filter(bank => {
+                if (activeFilter === 'active') return isActive(bank);
+                if (activeFilter === 'inactive') return !isActive(bank);
+                return activeFilter === 'all' || bank.account_type === activeFilter;
+            });
+            document.querySelector('.account-list-header span').textContent = filteredBanks.length + ' account' + (filteredBanks.length === 1 ? '' : 's');
+            document.getElementById('accountList').innerHTML = '<div class="account-list-header"><h4>Linked Accounts</h4><span>' + filteredBanks.length + ' account' + (filteredBanks.length === 1 ? '' : 's') + '</span></div>' + (filteredBanks.length ? filteredBanks.map(bank => {
+                const status = isActive(bank) ? 'active' : 'inactive';
+                return '<div class="account-item-detail" data-bank-id="' + escapeHtml(bank.id) + '"><div class="left"><div class="icon">' + renderBankIcon(bank) + '</div><div class="info"><div class="name">' + escapeHtml(bank.name) + '</div><div class="number">•••• ' + escapeHtml(bank.last_digits) + '</div><div class="type">' + escapeHtml(displayType(bank.account_type)) + '</div></div></div><div class="right"><div class="balance">' + money(bank.balance) + '</div><div class="status ' + status + '">' + (status === 'active' ? 'Active' : 'Inactive') + '</div></div></div>';
+            }).join('') : '<p class="empty-accounts">No accounts match this filter.</p>');
+            document.querySelectorAll('[data-bank-id]').forEach(item => item.addEventListener('click', () => { window.location.href = 'dashboard.html'; }));
+        }
+
+        function renderRecentActivity() {
+            const bankNames = new Map(allBanks.map(bank => [bank.id, bank.name]));
+            const activity = allTransactions.slice(0, 5);
+            document.getElementById('recentActivityList').innerHTML = activity.length ? activity.map(transaction => {
+                const amount = Number(transaction.amount);
+                const source = bankNames.get(transaction.from_bank_id);
+                const destination = bankNames.get(transaction.to_bank_id);
+                const title = transaction.title || (destination ? 'Transfer to ' + destination : 'Bank activity');
+                const bankLabel = source ? ' - ' + source : destination ? ' - ' + destination : '';
+                const icon = title.toLowerCase().includes('transfer') ? 'fa-exchange-alt' : amount > 0 ? 'fa-wallet' : 'fa-receipt';
+                return '<div class="recent-item"><div class="left"><div class="icon"><i class="fas ' + icon + '"></i></div><div class="info"><div class="desc">' + escapeHtml(title + bankLabel) + '</div><div class="date">' + new Date(transaction.created_at).toLocaleString() + '</div></div></div><div class="amount ' + (amount < 0 ? 'negative' : 'positive') + '">' + (amount < 0 ? '-' : '+') + money(Math.abs(amount)) + '</div></div>';
+            }).join('') : '<p>No activity recorded yet.</p>';
+        }
+
+        // Filters update the same bank data used by the summary and activity sections.
         document.querySelectorAll('.account-filter-btn').forEach(btn => {
             btn.addEventListener('click', function () {
-                document.querySelectorAll('.account-filter-btn').forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
+                activeFilter = this.dataset.filter;
+                document.querySelectorAll('.account-filter-btn').forEach(filterButton => filterButton.classList.toggle('active', filterButton === this));
+                renderAccounts();
             });
         });
 
@@ -589,23 +561,22 @@
         });
 
         async function loadAccounts() {
-            const response = await fetch('/api/banks');
-            if (!response.ok) {
+            const [banksResponse, transactionsResponse] = await Promise.all([fetch('/api/banks'), fetch('/api/transactions')]);
+            if (!banksResponse.ok || !transactionsResponse.ok) {
                 window.location.href = 'login.html';
                 return;
             }
-            const result = await response.json();
-            const banks = result.banks;
-            const total = banks.reduce((sum, bank) => sum + Number(bank.balance), 0);
+            allBanks = (await banksResponse.json()).banks;
+            allTransactions = (await transactionsResponse.json()).transactions;
+            const total = allBanks.reduce((sum, bank) => sum + Number(bank.balance), 0);
             document.getElementById('accountsTotal').textContent = 'R' + total.toFixed(2);
-            document.getElementById('accountsTotalSub').textContent = 'Across ' + banks.length + ' accounts';
-            document.getElementById('accountsCount').textContent = banks.length;
-            document.querySelector('.account-list-header span').textContent = banks.length + ' accounts';
-            document.getElementById('accountList').innerHTML = '<div class="account-list-header"><h4>Linked Accounts</h4><span>' + banks.length + ' accounts</span></div>' + banks.map(bank => `<div class="account-item-detail" data-bank-id="${bank.id}">
-                <div class="left"><div class="icon">${bank.name.charAt(0)}</div><div class="info"><div class="name">${bank.name}</div><div class="number">•••• ${bank.last_digits}</div><div class="type">${bank.account_type}</div></div></div>
-                <div class="right"><div class="balance">R${Number(bank.balance).toFixed(2)}</div><div class="status active">Active</div></div>
-            </div>`).join('');
-            document.querySelectorAll('[data-bank-id]').forEach(item => item.addEventListener('click', () => { window.location.href = 'dashboard.html'; }));
+            document.getElementById('accountsTotalSub').textContent = 'Across ' + allBanks.length + ' accounts';
+            document.getElementById('accountsCount').textContent = allBanks.length;
+            document.getElementById('activeCount').textContent = allBanks.filter(isActive).length;
+            document.getElementById('inactiveCount').textContent = allBanks.filter(bank => !isActive(bank)).length;
+            document.getElementById('cardsCount').textContent = allBanks.filter(bank => bank.account_type === 'credit').length;
+            renderAccounts();
+            renderRecentActivity();
         }
 
         loadAccounts().catch(() => { window.location.href = 'login.html'; });

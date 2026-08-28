@@ -4,7 +4,8 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Bankees – Accounts</title>
+    <title>Bankease – Accounts</title>
+    <link rel="icon" type="image/png" href="assets/iconLogo.png" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/responsive.css" />
@@ -15,13 +16,13 @@
         <!-- HEADER -->
         <div class="header">
             <a class="logo-wrapper" href="dashboard.html" aria-label="Go to dashboard">
-                <div class="logo-icon">B</div>
+                <img class="logo-icon" src="assets/bankeaseLogo.png" alt="Bankease icon">
                 <div>
-                    <div class="logo-text">BANKE<span class="highlight">ASE</span></div>
+                    <div class="logo-text">Bankease</div>
                     <div class="logo-tagline">ONE CARD. ALL BANKS.</div>
                 </div>
             </a>
-            <div class="header-actions"><i class="fas fa-bell"></i><i class="fas fa-cog"></i></div>
+            <div class="header-actions"><a href="notifications.html" aria-label="View notifications"><i class="fas fa-bell"></i></a><a href="settings.html" aria-label="Open settings"><i class="fas fa-cog"></i></a></div>
         </div>
 
         <div class="page-title-block">
@@ -73,6 +74,7 @@
         </div>
         <div class="bottom-space"></div>
     </div>
+    <script src="i18n.js"></script>
     <script src="theme.js"></script>
     <script>
         document.querySelectorAll('[data-route]').forEach(button => button.addEventListener('click', () => {

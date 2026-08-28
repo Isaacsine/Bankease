@@ -43,17 +43,13 @@ body {
 .logo-icon {
     width: 36px;
     height: 36px;
-    background: #1a1a2e;
-    color: #fff;
     border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 18px;
+    object-fit: contain;
+    display: block;
 }
 
 .logo-text {
+    display: block;
     font-weight: 700;
     font-size: 16px;
     letter-spacing: 1px;
@@ -76,6 +72,11 @@ body {
     gap: 16px;
     color: #7b7b8d;
     font-size: 18px;
+}
+
+.header-actions a {
+    color: inherit;
+    text-decoration: none;
 }
 
 /* ===== GREETING ===== */
@@ -678,6 +679,11 @@ label {
 
 .form-message.error {
     color: #e74c3c;
+}
+
+.form-message.success {
+    color: #2ecc71;
+    overflow-wrap: anywhere;
 }
 
 .auth-logo {

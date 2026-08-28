@@ -4,7 +4,8 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Bankees – Cards</title>
+    <title>Bankease â€“ Cards</title>
+    <link rel="icon" type="image/png" href="assets/iconLogo.png" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/responsive.css" />
@@ -28,7 +29,7 @@
         .card-wrapper {
             position: relative;
             width: 100%;
-            padding-bottom: 62.5%;
+            padding-bottom: 66.6667%;
             /* 1:1.6 ratio for card */
             transition: transform 0.1s ease;
             transform-style: preserve-3d;
@@ -76,6 +77,40 @@
             backface-visibility: hidden;
             transform-style: preserve-3d;
             transition: box-shadow 0.3s ease;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .card-artwork {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: inherit;
+            display: block;
+        }
+
+        .card-holder-overlay {
+            position: absolute;
+            left: 9.5%;
+            bottom: 20.5%;
+            z-index: 2;
+            max-width: 42%;
+            padding: 2px 10px 3px 0;
+            background: rgba(8, 8, 8, 0.94);
+            color: #fff;
+            font-family: 'Courier New', monospace;
+            font-size: clamp(12px, 2.2vw, 23px);
+            font-weight: 400;
+            letter-spacing: 0.12em;
+            line-height: 1.2;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .card-overlay-content {
+            display: none;
         }
 
         .card-3d::before {
@@ -127,7 +162,7 @@
             }
         }
 
-        /* Top section: Bankees + All Banks */
+        /* Top section: Bankease + All Banks */
         .card-top {
             display: flex;
             justify-content: space-between;
@@ -477,7 +512,7 @@
         /* Responsive */
         @media (max-width: 400px) {
             .card-3d {
-                padding: 16px 20px;
+                padding: 0;
             }
 
             .card-number {
@@ -516,7 +551,7 @@
 
         @media (min-width: 500px) {
             .card-3d {
-                padding: 28px 34px;
+                padding: 0;
                 border-radius: 24px;
             }
 
@@ -763,22 +798,22 @@
         <!-- HEADER -->
         <div class="header">
             <a class="logo-wrapper" href="dashboard.html" aria-label="Go to dashboard">
-                <div class="logo-icon">B</div>
+                <img class="logo-icon" src="assets/bankeaseLogo.png" alt="Bankease icon">
                 <div>
-                    <div class="logo-text">BANKE<span class="highlight">ASE</span></div>
+                    <div class="logo-text">Bankease</div>
                     <div class="logo-tagline">ONE CARD. ALL BANKS.</div>
                 </div>
             </a>
             <div class="header-actions">
-                <i class="fas fa-search"></i>
-                <i class="fas fa-bell"></i>
+                <a href="notifications.html" aria-label="View notifications"><i class="fas fa-bell"></i></a>
+                <a href="settings.html" aria-label="Open settings"><i class="fas fa-cog"></i></a>
             </div>
         </div>
 
         <!-- PAGE TITLE -->
         <div class="page-title-block">
             <h2>Your Cards</h2>
-            <p>Manage your Bankees SmartCard and linked bank cards</p>
+            <p>Manage your Bankease SmartCard and linked bank cards</p>
         </div>
 
         <div class="content-shell">
@@ -788,6 +823,9 @@
                 <div class="card-wrapper auto-rotate" id="cardWrapper">
                     <!-- FRONT -->
                     <div class="card-3d" id="cardFront">
+                        <img class="card-artwork" src="assets/card.png" alt="Bankease SmartCard">
+                        <div class="card-holder-overlay" id="cardHolderName">CARDHOLDER</div>
+                        <div class="card-overlay-content" aria-hidden="true">
                         <div class="card-top">
                             <div class="card-brand">
                                 <div class="card-brand-icon">B</div>
@@ -807,18 +845,12 @@
                             <div class="card-number">5284 7812 3456 7890</div>
                         </div>
 
-                        <div class="card-banks">
-                            <span class="bank-badge">FNB</span>
-                            <span class="bank-badge">CAPITEC</span>
-                            <span class="bank-badge">ABSA</span>
-                            <span class="bank-badge">NEDBANK</span>
-                            <span class="bank-badge orange">+3</span>
-                        </div>
+                        <div class="card-banks" id="cardBanks"></div>
 
                         <div class="card-bottom">
                             <div class="card-holder">
                                 <div class="card-holder-label">CARDHOLDER</div>
-                                <div class="card-holder-name">Sinethemba N.</div>
+                                <div class="card-holder-name">Cardholder</div>
                             </div>
                             <div class="card-expiry">
                                 <div class="card-expiry-label">EXPIRY</div>
@@ -827,6 +859,7 @@
                         </div>
 
                         <div class="card-type-badge">SMARTCARD</div>
+                        </div>
                     </div>
 
                     <!-- BACK -->
@@ -842,7 +875,7 @@
                         </div>
                         <div class="card-back-footer">
                             <div class="card-back-text">
-                                This card is issued by Bankees (Pty) Ltd.
+                                This card is issued by Bankease (Pty) Ltd.
                                 Authorized users only. Valid for use at all
                                 major banks in South Africa.
                             </div>
@@ -871,80 +904,35 @@
             <div class="smartcard-status-card">
                 <div class="smartcard-status-header">
                     <div>
-                        <div class="smartcard-status-name">Bankees SmartCard</div>
+                        <div class="smartcard-status-name">Bankease SmartCard</div>
                         <div class="smartcard-status-number">BK245678901234</div>
                     </div>
                     <div>
-                        <span class="card-status-badge active"><i class="fas fa-circle card-status-dot"></i> Active</span>
+                        <span class="card-status-badge active" id="smartcardStatus"><i class="fas fa-circle card-status-dot"></i> Active</span>
                     </div>
                 </div>
                 <div class="status-metrics">
                     <div>
                         <div class="metric-label">Limit</div>
-                        <div class="metric-value">R50,000</div>
+                        <div class="metric-value" id="cardLimit">R50,000.00</div>
                     </div>
                     <div>
                         <div class="metric-label">Used</div>
-                        <div class="metric-value">R12,560</div>
+                        <div class="metric-value" id="cardUsed">R0.00</div>
                     </div>
                     <div>
                         <div class="metric-label">Available</div>
-                        <div class="metric-value available">R37,440</div>
+                        <div class="metric-value available" id="cardAvailable">R50,000.00</div>
                     </div>
                 </div>
             </div>
 
             <!-- Linked Cards -->
             <h4 class="cards-heading">Linked Bank Cards</h4>
-            <div class="linked-cards-grid">
-                <div class="linked-card-item">
-                    <div class="left">
-                        <div class="linked-card-avatar avatar-fnb">
-                            F</div>
-                        <div>
-                            <div class="bank">FNB</div>
-                            <div class="number">•••• 4589</div>
-                        </div>
-                    </div>
-                    <span class="card-status-badge active">Active</span>
-                </div>
-                <div class="linked-card-item">
-                    <div class="left">
-                        <div class="linked-card-avatar avatar-capitec">
-                            C</div>
-                        <div>
-                            <div class="bank">Capitec</div>
-                            <div class="number">•••• 1234</div>
-                        </div>
-                    </div>
-                    <span class="card-status-badge inactive">Inactive</span>
-                </div>
-                <div class="linked-card-item">
-                    <div class="left">
-                        <div class="linked-card-avatar avatar-absa">
-                            A</div>
-                        <div>
-                            <div class="bank">Absa</div>
-                            <div class="number">•••• 7890</div>
-                        </div>
-                    </div>
-                    <span class="card-status-badge pending">Pending</span>
-                </div>
-                <div class="linked-card-item">
-                    <div class="left">
-                        <div class="linked-card-avatar avatar-nedbank">
-                            N</div>
-                        <div>
-                            <div class="bank">Nedbank</div>
-                            <div class="number">•••• 5678</div>
-                        </div>
-                    </div>
-                    <span class="card-status-badge active">Active</span>
-                </div>
-            </div>
+            <div class="linked-cards-grid" id="linkedCardsList"></div>
 
             <!-- Add Card Button -->
-            <button class="add-card-btn">
+            <button class="add-card-btn" onclick="location.href='linked-accounts.html'">
                 <i class="fas fa-plus-circle"></i> Link New Card
             </button>
         </div>
@@ -962,6 +950,7 @@
         <div class="bottom-space"></div>
     </div>
 
+    <script src="i18n.js"></script>
     <script src="theme.js"></script>
     <script>
         // ===== 3D CARD INTERACTION =====
@@ -1173,6 +1162,40 @@
             });
 
         })();
+
+        const cardMoney = value => 'R' + Number(value || 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        const cardLogos = {
+            'FNB': 'assets/fnblogo.png',
+            'Capitec': 'assets/capitec.jpg',
+            'Absa': 'assets/absa-bank%20logo.png',
+            'Nedbank': 'assets/nedbank.png',
+            'Standard Bank': 'assets/standardbank.jpg',
+            'TymeBank': 'assets/tynebank.png'
+        };
+        const cardEscape = value => String(value).replace(/[&<>'"]/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character]));
+
+        Promise.all([fetch('/api/me'), fetch('/api/banks'), fetch('/api/transactions')]).then(async ([userResponse, banksResponse, transactionsResponse]) => {
+            if (!userResponse.ok || !banksResponse.ok || !transactionsResponse.ok) throw new Error('Not logged in');
+            const user = (await userResponse.json()).user;
+            const banks = (await banksResponse.json()).banks;
+            const transactions = (await transactionsResponse.json()).transactions;
+            const limit = 50000;
+            const used = transactions.filter(transaction => Number(transaction.amount) < 0).reduce((total, transaction) => total + Math.abs(Number(transaction.amount)), 0);
+            document.getElementById('cardHolderName').textContent = user.fullName;
+            document.getElementById('cardLimit').textContent = cardMoney(limit);
+            document.getElementById('cardUsed').textContent = cardMoney(used);
+            document.getElementById('cardAvailable').textContent = cardMoney(Math.max(0, limit - used));
+            const status = document.getElementById('smartcardStatus');
+            status.className = 'card-status-badge ' + (banks.length ? 'active' : 'inactive');
+            status.innerHTML = '<i class="fas fa-circle card-status-dot"></i> ' + (banks.length ? 'Active' : 'Inactive');
+            document.getElementById('cardBanks').innerHTML = banks.length ? banks.map(bank => '<span class="bank-badge">' + cardEscape(bank.name) + '</span>').join('') : '<span class="bank-badge orange">No linked banks</span>';
+            document.getElementById('linkedCardsList').innerHTML = banks.length ? banks.map(bank => {
+                const logo = cardLogos[bank.name];
+                const activity = transactions.some(transaction => transaction.from_bank_id === bank.id || transaction.to_bank_id === bank.id);
+                const icon = logo ? '<img src="' + logo + '" alt="' + cardEscape(bank.name) + ' logo" style="width:40px;height:40px;object-fit:contain;border-radius:50%;background:#fff;">' : cardEscape(bank.name.charAt(0));
+                return '<div class="linked-card-item"><div class="left"><div class="linked-card-avatar">' + icon + '</div><div><div class="bank">' + cardEscape(bank.name) + '</div><div class="number">â€¢â€¢â€¢â€¢ ' + cardEscape(bank.last_digits) + '</div></div></div><span class="card-status-badge ' + (Number(bank.balance) > 0 || activity ? 'active' : 'inactive') + '">' + (Number(bank.balance) > 0 || activity ? 'Active' : 'Inactive') + '</span></div>';
+            }).join('') : '<p>No linked bank cards yet.</p>';
+        }).catch(() => { window.location.href = 'login.html'; });
     </script>
 </body>
 

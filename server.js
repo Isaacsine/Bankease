@@ -1,7 +1,8 @@
 require('dotenv').config();
 const express = require('express');
-const session = require('express-session');
+const cookieSession = require('cookie-session');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const supabase = require('./supabase-client');
 
 const app = express();
@@ -17,12 +18,13 @@ const starterBanks = [
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(session({
+app.use(cookieSession({
     name: 'bankees.sid',
-    secret: process.env.SESSION_SECRET || 'change-this-local-session-secret',
-    resave: false,
-    saveUninitialized: false,
-    cookie: { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', maxAge: 1000 * 60 * 60 * 24 * sevenDays }
+    keys: [process.env.SESSION_SECRET || 'change-this-local-session-secret'],
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 1000 * 60 * 60 * 24 * sevenDays
 }));
 
 function publicUser(user) {
@@ -47,6 +49,14 @@ function requireUser(request, response) {
         return false;
     }
     return true;
+}
+
+function passwordResetTokenHash(token) {
+    return crypto.createHash('sha256').update(token).digest('hex');
+}
+
+function passwordIsValid(password) {
+    return typeof password === 'string' && password.length >= 8;
 }
 
 app.get('/api/health', async (request, response, next) => {
@@ -78,19 +88,66 @@ app.post('/api/login', async (request, response, next) => {
         const { email, password } = request.body || {};
         const user = await findUserByEmail(email);
         if (!user || typeof password !== 'string' || !(await bcrypt.compare(password, user.password_hash))) return response.status(401).json({ error: 'Email or password is incorrect.' });
-        return request.session.regenerate(error => {
-            if (error) return next(error);
-            request.session.userId = user.id;
-            return response.json({ user: publicUser(user) });
-        });
+        request.session = { userId: user.id };
+        return response.json({ user: publicUser(user) });
     } catch (error) { return next(error); }
 });
 
-app.post('/api/logout', (request, response, next) => request.session.destroy(error => {
-    if (error) return next(error);
-    response.clearCookie('bankees.sid');
+app.post('/api/change-password', async (request, response, next) => {
+    try {
+        if (!requireUser(request, response)) return;
+        const { currentPassword, newPassword, confirmPassword } = request.body || {};
+        if (!passwordIsValid(newPassword)) return response.status(422).json({ error: 'New password must be at least 8 characters.' });
+        if (newPassword !== confirmPassword) return response.status(400).json({ error: 'New passwords do not match.' });
+        const { data: user, error: findError } = await supabase.from('users').select('password_hash').eq('id', request.session.userId).maybeSingle();
+        if (findError) throw findError;
+        if (!user || typeof currentPassword !== 'string' || !(await bcrypt.compare(currentPassword, user.password_hash))) return response.status(401).json({ error: 'Current password is incorrect.' });
+        const passwordHash = await bcrypt.hash(newPassword, 12);
+        const { error } = await supabase.from('users').update({ password_hash: passwordHash }).eq('id', request.session.userId);
+        if (error) throw error;
+        return response.json({ message: 'Password updated successfully.' });
+    } catch (error) { return next(error); }
+});
+
+app.post('/api/forgot-password', async (request, response, next) => {
+    try {
+        const email = typeof request.body?.email === 'string' ? request.body.email.trim().toLowerCase() : '';
+        const genericResponse = { message: 'If an account exists for that email, a reset link has been created.' };
+        if (!email) return response.status(400).json({ error: 'Enter your email address.' });
+        const user = await findUserByEmail(email);
+        if (!user) return response.json(genericResponse);
+        const token = crypto.randomBytes(32).toString('hex');
+        const { error } = await supabase.from('password_reset_tokens').insert({ user_id: user.id, token_hash: passwordResetTokenHash(token), expires_at: new Date(Date.now() + 1000 * 60 * 30).toISOString() });
+        if (error) throw error;
+        const baseUrl = process.env.PASSWORD_RESET_BASE_URL || `http://localhost:${port}`;
+        const result = { ...genericResponse };
+        if (process.env.NODE_ENV !== 'production') result.resetUrl = `${baseUrl}/reset-password.html?token=${token}`;
+        return response.json(result);
+    } catch (error) { return next(error); }
+});
+
+app.post('/api/reset-password', async (request, response, next) => {
+    try {
+        const { token, newPassword, confirmPassword } = request.body || {};
+        if (typeof token !== 'string' || !token) return response.status(400).json({ error: 'This reset link is invalid.' });
+        if (!passwordIsValid(newPassword)) return response.status(422).json({ error: 'New password must be at least 8 characters.' });
+        if (newPassword !== confirmPassword) return response.status(400).json({ error: 'Passwords do not match.' });
+        const { data: resetToken, error: tokenError } = await supabase.from('password_reset_tokens').select('id,user_id,expires_at').eq('token_hash', passwordResetTokenHash(token)).maybeSingle();
+        if (tokenError) throw tokenError;
+        if (!resetToken || new Date(resetToken.expires_at) <= new Date()) return response.status(400).json({ error: 'This reset link is invalid or has expired.' });
+        const passwordHash = await bcrypt.hash(newPassword, 12);
+        const { error: updateError } = await supabase.from('users').update({ password_hash: passwordHash }).eq('id', resetToken.user_id);
+        if (updateError) throw updateError;
+        const { error: deleteError } = await supabase.from('password_reset_tokens').delete().eq('id', resetToken.id);
+        if (deleteError) throw deleteError;
+        return response.json({ message: 'Password updated successfully.' });
+    } catch (error) { return next(error); }
+});
+
+app.post('/api/logout', (request, response) => {
+    request.session = null;
     return response.status(204).end();
-}));
+});
 
 app.get('/api/me', async (request, response, next) => {
     try {
@@ -125,6 +182,20 @@ app.post('/api/banks', async (request, response, next) => {
             throw error;
         }
         return response.status(201).json({ bank: data });
+    } catch (error) { return next(error); }
+});
+
+app.delete('/api/banks/:id', async (request, response, next) => {
+    try {
+        if (!requireUser(request, response)) return;
+        const { data: deletedBank, error } = await supabase.from('banks').delete()
+            .eq('id', request.params.id)
+            .eq('user_id', request.session.userId)
+            .select('id')
+            .maybeSingle();
+        if (error) throw error;
+        if (!deletedBank) return response.status(404).json({ error: 'Linked account was not found.' });
+        return response.status(204).end();
     } catch (error) { return next(error); }
 });
 
@@ -165,7 +236,7 @@ app.use((error, request, response, next) => {
 });
 
 if (require.main === module) {
-    app.listen(port, () => console.log(`Bankees is running at http://localhost:${port}`));
+    app.listen(port, () => console.log(`Bankease is running at http://localhost:${port}`));
 }
 
 module.exports = app;

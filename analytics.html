@@ -4,7 +4,8 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Bankees – Analytics</title>
+    <title>Bankease – Analytics</title>
+    <link rel="icon" type="image/png" href="assets/iconLogo.png" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/responsive.css" />
@@ -241,6 +242,47 @@
             margin-bottom: 16px;
         }
 
+        .custom-date-range {
+            display: none;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .custom-date-range.visible {
+            display: grid;
+        }
+
+        .custom-date-range label {
+            color: #7b7b8d;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .custom-date-range input {
+            display: block;
+            margin-top: 4px;
+            padding: 8px 9px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            background: #fff;
+            color: #1a1a2e;
+            font: inherit;
+            font-size: 12px;
+        }
+
+        .custom-date-apply {
+            align-self: end;
+            border: 0;
+            border-radius: 10px;
+            padding: 9px 12px;
+            background: #1a1a2e;
+            color: #fff;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
         .analytics-stats-grid {
             margin-bottom: 12px;
         }
@@ -287,6 +329,13 @@
             font-size: 14px;
             color: #1a1a2e;
             margin-bottom: 8px;
+        }
+
+        .analytics-empty {
+            color: #7b7b8d;
+            font-size: 13px;
+            padding: 12px 0 4px;
+            text-align: center;
         }
 
         .fill-35 { width: 35%; background: #1a1a2e; }
@@ -362,6 +411,14 @@
             .stat-grid {
                 grid-template-columns: 1fr;
             }
+
+            .custom-date-range.visible {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .custom-date-apply {
+                grid-column: 1 / -1;
+            }
         }
     </style>
 </head>
@@ -371,15 +428,15 @@
         <!-- HEADER -->
         <div class="header">
             <a class="logo-wrapper" href="dashboard.html" aria-label="Go to dashboard">
-                <div class="logo-icon">B</div>
+                <img class="logo-icon" src="assets/bankeaseLogo.png" alt="Bankease icon">
                 <div>
-                    <div class="logo-text">BANKE<span class="highlight">ASE</span></div>
+                    <div class="logo-text">Bankease</div>
                     <div class="logo-tagline">ONE CARD. ALL BANKS.</div>
                 </div>
             </a>
             <div class="header-actions">
-                <i class="fas fa-download"></i>
-                <i class="fas fa-calendar-alt"></i>
+                <a href="notifications.html" aria-label="View notifications"><i class="fas fa-bell"></i></a>
+                <a href="settings.html" aria-label="Open settings"><i class="fas fa-cog"></i></a>
             </div>
         </div>
 
@@ -394,10 +451,15 @@
             <!-- Period Selector -->
             <div class="analytics-period-wrapper">
                 <div class="period-selector">
-                    <button class="period-btn active">This Month</button>
-                    <button class="period-btn">Last Month</button>
-                    <button class="period-btn">This Year</button>
-                    <button class="period-btn">Custom</button>
+                    <button class="period-btn active" data-period="this-month">This Month</button>
+                    <button class="period-btn" data-period="last-month">Last Month</button>
+                    <button class="period-btn" data-period="this-year">This Year</button>
+                    <button class="period-btn" data-period="custom">Custom</button>
+                </div>
+                <div class="custom-date-range" id="customDateRange">
+                    <label>From<input type="date" id="customStartDate"></label>
+                    <label>To<input type="date" id="customEndDate"></label>
+                    <button class="custom-date-apply" id="applyCustomDates" type="button">Apply dates</button>
                 </div>
             </div>
 
@@ -405,23 +467,23 @@
             <div class="stat-grid analytics-stats-grid">
                 <div class="analytics-card analytics-card-compact">
                     <div class="analytics-stat">
-                        <div class="number">R8,450</div>
+                        <div class="number" id="totalSpent">R0.00</div>
                         <div class="label">Total Spent</div>
-                        <div class="trend-up"><i class="fas fa-arrow-up"></i> +12.5%</div>
+                        <div class="trend-up" id="spentTrend"><i class="fas fa-minus"></i> No activity</div>
                     </div>
                 </div>
                 <div class="analytics-card analytics-card-compact">
                     <div class="analytics-stat">
-                        <div class="number">R12,560</div>
+                        <div class="number" id="totalIncome">R0.00</div>
                         <div class="label">Total Income</div>
-                        <div class="trend-up"><i class="fas fa-arrow-up"></i> +8.3%</div>
+                        <div class="trend-up" id="incomeTrend"><i class="fas fa-minus"></i> No activity</div>
                     </div>
                 </div>
                 <div class="analytics-card analytics-card-compact">
                     <div class="analytics-stat">
-                        <div class="number">R4,110</div>
+                        <div class="number" id="totalSavings">R0.00</div>
                         <div class="label">Savings</div>
-                        <div class="trend-up"><i class="fas fa-arrow-up"></i> +5.2%</div>
+                        <div class="trend-up" id="savingsTrend"><i class="fas fa-minus"></i> No activity</div>
                     </div>
                 </div>
             </div>
@@ -430,191 +492,29 @@
             <div class="analytics-card">
                 <div class="monthly-header">
                     <h4>Monthly Spending</h4>
-                    <span>2024</span>
+                    <span id="monthlyPeriod">This year</span>
                 </div>
-                <div class="monthly-chart">
-                    <div class="monthly-bar">
-                        <div class="value">R2.1k</div>
-                        <div class="bar bar-40"></div>
-                        <div class="label">Jan</div>
-                    </div>
-                    <div class="monthly-bar">
-                        <div class="value">R1.8k</div>
-                        <div class="bar bar-35"></div>
-                        <div class="label">Feb</div>
-                    </div>
-                    <div class="monthly-bar">
-                        <div class="value">R2.5k</div>
-                        <div class="bar bar-48"></div>
-                        <div class="label">Mar</div>
-                    </div>
-                    <div class="monthly-bar">
-                        <div class="value">R3.2k</div>
-                        <div class="bar bar-62"></div>
-                        <div class="label">Apr</div>
-                    </div>
-                    <div class="monthly-bar">
-                        <div class="value">R2.8k</div>
-                        <div class="bar bar-54"></div>
-                        <div class="label">May</div>
-                    </div>
-                    <div class="monthly-bar">
-                        <div class="value">R3.5k</div>
-                        <div class="bar bar-68"></div>
-                        <div class="label">Jun</div>
-                    </div>
-                    <div class="monthly-bar">
-                        <div class="value">R4.2k</div>
-                        <div class="bar bar-82"></div>
-                        <div class="label">Jul</div>
-                    </div>
-                    <div class="monthly-bar">
-                        <div class="value">R3.8k</div>
-                        <div class="bar bar-74"></div>
-                        <div class="label">Aug</div>
-                    </div>
-                    <div class="monthly-bar">
-                        <div class="value">R4.5k</div>
-                        <div class="bar bar-88"></div>
-                        <div class="label">Sep</div>
-                    </div>
-                    <div class="monthly-bar">
-                        <div class="value">R5.1k</div>
-                        <div class="bar bar-100"></div>
-                        <div class="label">Oct</div>
-                    </div>
-                    <div class="monthly-bar">
-                        <div class="value">R4.8k</div>
-                        <div class="bar bar-94"></div>
-                        <div class="label">Nov</div>
-                    </div>
-                    <div class="monthly-bar">
-                        <div class="value">R5.4k</div>
-                        <div class="bar bar-106"></div>
-                        <div class="label">Dec</div>
-                    </div>
-                </div>
+                <div class="monthly-chart" id="monthlyChart"></div>
             </div>
 
             <!-- Spending by Category -->
             <div class="analytics-card analytics-card-spaced">
                 <h4>Spending by Category</h4>
 
-                <div class="spending-category">
-                    <span class="category-label">🛒 Shopping</span>
-                    <div class="category-bar">
-                        <div class="fill fill-35"></div>
-                    </div>
-                    <span class="category-amount">R1,890</span>
-                </div>
-
-                <div class="spending-category">
-                    <span class="category-label">🍔 Food</span>
-                    <div class="category-bar">
-                        <div class="fill fill-28"></div>
-                    </div>
-                    <span class="category-amount">R1,512</span>
-                </div>
-
-                <div class="spending-category">
-                    <span class="category-label">🚗 Transport</span>
-                    <div class="category-bar">
-                        <div class="fill fill-20"></div>
-                    </div>
-                    <span class="category-amount">R1,080</span>
-                </div>
-
-                <div class="spending-category">
-                    <span class="category-label">🏠 Bills</span>
-                    <div class="category-bar">
-                        <div class="fill fill-15"></div>
-                    </div>
-                    <span class="category-amount">R810</span>
-                </div>
-
-                <div class="spending-category">
-                    <span class="category-label">🎮 Entertainment</span>
-                    <div class="category-bar">
-                        <div class="fill fill-12"></div>
-                    </div>
-                    <span class="category-amount">R648</span>
-                </div>
+                <div id="categoryList"></div>
             </div>
 
             <!-- Bank Usage -->
             <div class="analytics-card analytics-card-spaced">
                 <h4>Bank Usage Distribution</h4>
 
-                <div class="spending-category">
-                    <span class="category-label">FNB</span>
-                    <div class="category-bar">
-                        <div class="fill fill-45"></div>
-                    </div>
-                    <span class="category-amount">45%</span>
-                </div>
-
-                <div class="spending-category">
-                    <span class="category-label">Capitec</span>
-                    <div class="category-bar">
-                        <div class="fill fill-30"></div>
-                    </div>
-                    <span class="category-amount">30%</span>
-                </div>
-
-                <div class="spending-category">
-                    <span class="category-label">Absa</span>
-                    <div class="category-bar">
-                        <div class="fill fill-20"></div>
-                    </div>
-                    <span class="category-amount">15%</span>
-                </div>
-
-                <div class="spending-category">
-                    <span class="category-label">Other</span>
-                    <div class="category-bar">
-                        <div class="fill fill-10"></div>
-                    </div>
-                    <span class="category-amount">10%</span>
-                </div>
+                <div id="bankUsageList"></div>
             </div>
 
             <!-- Insights -->
             <div class="analytics-card analytics-card-spaced">
                 <h4>💡 Insights</h4>
-
-                <div class="insight-item">
-                    <div class="insight-icon green"><i class="fas fa-arrow-up"></i></div>
-                    <div class="insight-text">
-                        <div class="title">Spending increased by 12.5%</div>
-                        <div class="desc">Your spending this month is higher than last month. Check your shopping
-                            category.</div>
-                    </div>
-                </div>
-
-                <div class="insight-item">
-                    <div class="insight-icon blue"><i class="fas fa-lightbulb"></i></div>
-                    <div class="insight-text">
-                        <div class="title">You could save R450 this month</div>
-                        <div class="desc">Reduce eating out by 20% to reach your savings goal of R4,500 this month.
-                        </div>
-                    </div>
-                </div>
-
-                <div class="insight-item">
-                    <div class="insight-icon green"><i class="fas fa-piggy-bank"></i></div>
-                    <div class="insight-text">
-                        <div class="title">Best spending day: Friday</div>
-                        <div class="desc">You spend 30% more on weekends. Consider planning weekend expenses.</div>
-                    </div>
-                </div>
-
-                <div class="insight-item">
-                    <div class="insight-icon orange"><i class="fas fa-trophy"></i></div>
-                    <div class="insight-text">
-                        <div class="title">Top spending category: Shopping</div>
-                        <div class="desc">You've spent R1,890 on shopping this month, 35% of total expenses.</div>
-                    </div>
-                </div>
+                <div id="insightList"></div>
             </div>
 
             <!-- Recommendations -->
@@ -624,8 +524,8 @@
                 <div class="recommendation-row">
                     <i class="fas fa-credit-card icon-card"></i>
                     <div>
-                        <div class="recommendation-title">Switch to Bankees Card</div>
-                        <div class="recommendation-text">Using Bankees SmartCard could save you up to 2% on
+                        <div class="recommendation-title">Switch to Bankease Card</div>
+                        <div class="recommendation-text">Using Bankease SmartCard could save you up to 2% on
                             transactions</div>
                     </div>
                 </div>
@@ -642,9 +542,8 @@
                 <div class="recommendation-row">
                     <i class="fas fa-university icon-bank"></i>
                     <div>
-                        <div class="recommendation-subtitle">Use FNB for large purchases</div>
-                        <div class="recommendation-subtext">FNB offers the best rewards rate for large transactions
-                        </div>
+                        <div class="recommendation-subtitle" id="topBankRecommendation">Use your most active bank</div>
+                        <div class="recommendation-subtext" id="topBankRecommendationText">Bank activity will appear here once transactions are recorded.</div>
                     </div>
                 </div>
             </div>
@@ -662,7 +561,137 @@
         </div>
         <div class="bottom-space"></div>
     </div>
+    <script src="i18n.js"></script>
     <script src="theme.js"></script>
+    <script>
+        const money = value => 'R' + Number(value || 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        const escapeHtml = value => String(value).replace(/[&<>'"]/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character]));
+        const categoryRules = [
+            { name: 'Shopping', icon: 'fa-shopping-cart', terms: ['shop', 'purchase', 'spar', 'clothing', 'retail'] },
+            { name: 'Food', icon: 'fa-utensils', terms: ['food', 'restaurant', 'meal', 'eat', 'grocery'] },
+            { name: 'Transport', icon: 'fa-car', terms: ['transport', 'fuel', 'taxi', 'uber', 'petrol'] },
+            { name: 'Bills', icon: 'fa-file-invoice', terms: ['bill', 'rent', 'electric', 'water', 'airtime'] },
+            { name: 'Entertainment', icon: 'fa-gamepad', terms: ['movie', 'game', 'music', 'entertainment'] }
+        ];
+        let banks = [];
+        let transactions = [];
+        let selectedPeriod = 'this-month';
+        let customStartDate = '';
+        let customEndDate = '';
+
+        function getCategory(title) {
+            const text = String(title || '').toLowerCase();
+            return categoryRules.find(category => category.terms.some(term => text.includes(term))) || { name: 'Other', icon: 'fa-receipt', terms: [] };
+        }
+
+        function getSelectedDateRange() {
+            const now = new Date();
+            if (selectedPeriod === 'last-month') return { start: new Date(now.getFullYear(), now.getMonth() - 1, 1), end: new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999) };
+            if (selectedPeriod === 'this-year') return { start: new Date(now.getFullYear(), 0, 1), end: new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999) };
+            if (selectedPeriod === 'custom' && customStartDate && customEndDate) return { start: new Date(customStartDate + 'T00:00:00'), end: new Date(customEndDate + 'T23:59:59.999') };
+            return { start: new Date(now.getFullYear(), now.getMonth(), 1), end: new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999) };
+        }
+
+        function currentTransactions() {
+            const range = getSelectedDateRange();
+            return transactions.filter(transaction => {
+                const date = new Date(transaction.created_at);
+                return date >= range.start && date <= range.end;
+            });
+        }
+
+        function periodLabel() {
+            if (selectedPeriod === 'last-month') return 'last month';
+            if (selectedPeriod === 'this-year') return 'this year';
+            if (selectedPeriod === 'custom') return 'the selected dates';
+            return 'this month';
+        }
+
+        function renderRows(items, total, emptyText) {
+            if (!items.length) return '<p class="analytics-empty">' + emptyText + '</p>';
+            return items.map(item => {
+                const percent = total ? Math.max(2, Math.round(item.amount / total * 100)) : 0;
+                return '<div class="spending-category"><span class="category-label">' + escapeHtml(item.label) + '</span><div class="category-bar"><div class="fill" style="width:' + percent + '%;background:' + item.color + '"></div></div><span class="category-amount">' + item.display + '</span></div>';
+            }).join('');
+        }
+
+        function renderAnalytics() {
+            const periodTransactions = currentTransactions();
+            const expenses = periodTransactions.filter(transaction => Number(transaction.amount) < 0);
+            const income = periodTransactions.filter(transaction => Number(transaction.amount) > 0);
+            const spent = expenses.reduce((total, transaction) => total + Math.abs(Number(transaction.amount)), 0);
+            const earned = income.reduce((total, transaction) => total + Number(transaction.amount), 0);
+            const savings = earned - spent;
+            document.getElementById('totalSpent').textContent = money(spent);
+            document.getElementById('totalIncome').textContent = money(earned);
+            document.getElementById('totalSavings').textContent = money(savings);
+            const trendText = spent || earned ? '<i class="fas fa-chart-line"></i> Based on ' + periodLabel() : '<i class="fas fa-minus"></i> No activity in ' + periodLabel();
+            document.getElementById('spentTrend').innerHTML = trendText;
+            document.getElementById('incomeTrend').innerHTML = trendText;
+            document.getElementById('savingsTrend').innerHTML = trendText;
+
+            const range = getSelectedDateRange();
+            const chartMonths = [];
+            const chartStart = new Date(range.start.getFullYear(), range.start.getMonth(), 1);
+            const chartEnd = selectedPeriod === 'this-year' ? new Date(range.start.getFullYear(), 11, 1) : new Date(range.end.getFullYear(), range.end.getMonth(), 1);
+            for (let date = chartStart; date <= chartEnd; date.setMonth(date.getMonth() + 1)) {
+                const monthStart = new Date(date.getFullYear(), date.getMonth(), 1);
+                const monthEnd = new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59, 999);
+                chartMonths.push({ date: new Date(date), amount: periodTransactions.filter(transaction => { const transactionDate = new Date(transaction.created_at); return transactionDate >= monthStart && transactionDate <= monthEnd && Number(transaction.amount) < 0; }).reduce((total, transaction) => total + Math.abs(Number(transaction.amount)), 0) });
+            }
+            const maxMonth = Math.max(...chartMonths.map(item => item.amount), 1);
+            document.getElementById('monthlyChart').innerHTML = chartMonths.map(item => '<div class="monthly-bar"><div class="value">' + (item.amount ? money(item.amount) : 'R0.00') + '</div><div class="bar" style="height:' + Math.max(4, Math.round(item.amount / maxMonth * 106)) + 'px;background:' + (item.amount === maxMonth ? '#e67e22' : '#1a1a2e') + '"></div><div class="label">' + item.date.toLocaleString('en', { month: 'short' }) + '</div></div>').join('');
+
+            const categoryTotals = categoryRules.map(category => ({ label: category.name, amount: expenses.filter(transaction => getCategory(transaction.title).name === category.name).reduce((total, transaction) => total + Math.abs(Number(transaction.amount)), 0), display: '', color: '#1a1a2e' })).filter(item => item.amount > 0);
+            const otherAmount = expenses.filter(transaction => getCategory(transaction.title).name === 'Other').reduce((total, transaction) => total + Math.abs(Number(transaction.amount)), 0);
+            if (otherAmount) categoryTotals.push({ label: 'Other', amount: otherAmount, display: '', color: '#7b7b8d' });
+            categoryTotals.sort((first, second) => second.amount - first.amount).forEach(item => { item.display = money(item.amount); });
+            document.getElementById('categoryList').innerHTML = renderRows(categoryTotals, spent, 'No spending activity recorded for ' + periodLabel() + '.');
+
+            const bankTotals = banks.map(bank => ({ label: bank.name, amount: expenses.filter(transaction => transaction.from_bank_id === bank.id).reduce((total, transaction) => total + Math.abs(Number(transaction.amount)), 0), display: '', color: '#1a1a2e' })).filter(item => item.amount > 0).sort((first, second) => second.amount - first.amount);
+            const bankTotal = bankTotals.reduce((total, item) => total + item.amount, 0);
+            bankTotals.forEach(item => { item.display = Math.round(item.amount / bankTotal * 100) + '%'; });
+            document.getElementById('bankUsageList').innerHTML = renderRows(bankTotals, bankTotal, 'No bank activity recorded for ' + periodLabel() + '.');
+
+            const topCategory = categoryTotals[0];
+            const topBank = bankTotals[0];
+            const insightList = document.getElementById('insightList');
+            insightList.innerHTML = [
+                { icon: 'fa-chart-line', color: 'green', title: spent ? 'Total spending: ' + money(spent) : 'No spending recorded', desc: expenses.length ? expenses.length + ' expense transaction' + (expenses.length === 1 ? '' : 's') + ' recorded for ' + periodLabel() + '.' : 'Your spending analysis will update when transactions are recorded.' },
+                { icon: 'fa-lightbulb', color: 'blue', title: savings >= 0 ? 'Current savings: ' + money(savings) : 'Spending is above income', desc: earned ? 'Income of ' + money(earned) + ' against spending of ' + money(spent) + ' for ' + periodLabel() + '.' : 'Income activity will appear here when deposits are recorded.' },
+                { icon: 'fa-piggy-bank', color: 'green', title: periodTransactions.length ? 'Most active day: ' + getMostActiveDay(periodTransactions) : 'No active day yet', desc: 'Based on the dates of your recorded activity for ' + periodLabel() + '.' },
+                { icon: 'fa-trophy', color: 'orange', title: topCategory ? 'Top spending category: ' + topCategory.label : 'Top spending category: None', desc: topCategory ? 'You have spent ' + money(topCategory.amount) + ' on ' + topCategory.label.toLowerCase() + ' for ' + periodLabel() + '.' : 'Category analysis will appear after your first expense.' }
+            ].map(item => '<div class="insight-item"><div class="insight-icon ' + item.color + '"><i class="fas ' + item.icon + '"></i></div><div class="insight-text"><div class="title">' + item.title + '</div><div class="desc">' + item.desc + '</div></div></div>').join('');
+            document.getElementById('topBankRecommendation').textContent = topBank ? 'Most used bank: ' + topBank.label : 'Use your linked banks';
+            document.getElementById('topBankRecommendationText').textContent = topBank ? topBank.label + ' handled ' + topBank.display + ' of your spending for ' + periodLabel() + '.' : 'Bank activity will appear here once transactions are recorded.';
+        }
+
+        function getMostActiveDay(items) {
+            const days = items.reduce((counts, transaction) => { const day = new Date(transaction.created_at).toLocaleString('en', { weekday: 'long' }); counts[day] = (counts[day] || 0) + 1; return counts; }, {});
+            return Object.entries(days).sort((first, second) => second[1] - first[1])[0][0];
+        }
+
+        document.querySelectorAll('.period-btn').forEach(button => button.addEventListener('click', () => {
+            selectedPeriod = button.dataset.period;
+            document.querySelectorAll('.period-btn').forEach(periodButton => periodButton.classList.toggle('active', periodButton === button));
+            document.getElementById('customDateRange').classList.toggle('visible', selectedPeriod === 'custom');
+            if (selectedPeriod !== 'custom') renderAnalytics();
+        }));
+
+        document.getElementById('applyCustomDates').addEventListener('click', () => {
+            customStartDate = document.getElementById('customStartDate').value;
+            customEndDate = document.getElementById('customEndDate').value;
+            if (!customStartDate || !customEndDate || customStartDate > customEndDate) return;
+            renderAnalytics();
+        });
+
+        Promise.all([fetch('/api/banks'), fetch('/api/transactions')]).then(async ([banksResponse, transactionsResponse]) => {
+            if (!banksResponse.ok || !transactionsResponse.ok) throw new Error('Not logged in');
+            banks = (await banksResponse.json()).banks;
+            transactions = (await transactionsResponse.json()).transactions;
+            renderAnalytics();
+        }).catch(() => { window.location.href = 'login.html'; });
+    </script>
 </body>
 
 </html>

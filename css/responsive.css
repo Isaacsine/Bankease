@@ -10,6 +10,11 @@
         font-size: 14px;
     }
 
+    .brand-logo {
+        width: 170px;
+        height: 38px;
+    }
+
     .balance-amount {
         font-size: 26px;
     }
