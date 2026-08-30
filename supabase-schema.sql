@@ -90,3 +90,43 @@ begin
     return json_build_object('from', source_bank.name, 'to', destination_bank.name, 'amount', p_amount, 'status', 'completed');
 end;
 $$;
+
+create or replace function public.purchase_airtime(
+    p_user_id uuid,
+    p_bank_id uuid,
+    p_network text,
+    p_phone text,
+    p_amount numeric
+)
+returns json
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+    source_bank public.banks;
+begin
+    if p_amount is null or p_amount <= 0 then
+        raise exception 'Airtime amount must be greater than zero.' using errcode = '22023';
+    end if;
+    if nullif(trim(p_network), '') is null or nullif(trim(p_phone), '') is null then
+        raise exception 'Network and cellphone number are required.' using errcode = '22023';
+    end if;
+
+    select * into source_bank from public.banks
+    where id = p_bank_id and user_id = p_user_id for update;
+
+    if source_bank.id is null then
+        raise exception 'Bank was not found.' using errcode = 'P0002';
+    end if;
+    if source_bank.balance < p_amount then
+        raise exception 'Insufficient balance.' using errcode = '22003';
+    end if;
+
+    update public.banks set balance = balance - p_amount where id = source_bank.id;
+    insert into public.transactions(user_id, from_bank_id, title, amount)
+    values (p_user_id, source_bank.id, 'Airtime Purchase - ' || trim(p_network), -p_amount);
+
+    return json_build_object('bank', source_bank.name, 'network', trim(p_network), 'phone', trim(p_phone), 'amount', p_amount, 'status', 'completed');
+end;
+$$;

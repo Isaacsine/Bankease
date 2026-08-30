@@ -215,6 +215,22 @@ app.post('/api/transfers', async (request, response, next) => {
     } catch (error) { return next(error); }
 });
 
+app.post('/api/airtime', async (request, response, next) => {
+    try {
+        if (!requireUser(request, response)) return;
+        const { network, phone, bankId, amount } = request.body || {};
+        const value = Number(amount);
+        if (typeof network !== 'string' || !network.trim() || typeof phone !== 'string' || !phone.trim() || !bankId) return response.status(400).json({ error: 'Enter the network, cellphone number, and bank.' });
+        if (!Number.isFinite(value) || value <= 0) return response.status(422).json({ error: 'Airtime amount must be greater than zero.' });
+        const { data: purchase, error } = await supabase.rpc('purchase_airtime', { p_user_id: request.session.userId, p_bank_id: bankId, p_network: network.trim(), p_phone: phone.trim(), p_amount: value });
+        if (error) {
+            const status = error.code === '22003' ? 409 : error.code === 'P0002' ? 404 : 400;
+            return response.status(status).json({ error: error.message });
+        }
+        return response.status(201).json({ purchase });
+    } catch (error) { return next(error); }
+});
+
 app.get('/api/transactions', async (request, response, next) => {
     try {
         if (!requireUser(request, response)) return;

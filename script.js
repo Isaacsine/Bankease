@@ -304,7 +304,6 @@
     async function addBank() {
         const name = modalBankSelect.value;
         const accountNum = modalAccount.value.trim() || '0000';
-        const lastDigits = accountNum.slice(-4) || '0000';
         const balance = parseFloat(modalBalance.value) || 0;
         const type = modalAccountType ? modalAccountType.value : 'Cheque Account';
         const fullName = name;
@@ -314,14 +313,6 @@
         if (!response.ok) return alert(result.error || 'Could not add bank.');
         const newBank = normalizeBank(result.bank);
         banks.push(newBank);
-
-        transactions.unshift({
-            title: 'Account Opened',
-            bank: name + ' **** ' + lastDigits,
-            amount: 0,
-            time: 'Just now',
-            icon: 'fa-plus-circle'
-        });
 
         selectedId = newBank.id;
         renderAll();
@@ -385,7 +376,7 @@
     }
 
     // ---------- AIRTIME ----------
-    function buyAirtime() {
+    async function buyAirtime() {
         const network = document.getElementById('airtimeNetwork').value;
         const phone = document.getElementById('airtimePhone').value.trim();
         const amount = parseFloat(document.getElementById('airtimeAmount').value);
@@ -414,18 +405,21 @@
             return;
         }
 
-        bank.balance -= amount;
-        transactions.unshift({
-            title: 'Airtime Purchase - ' + network,
-            bank: bank.name + ' **** ' + bank.lastDigits,
-            amount: -amount,
-            time: 'Just now',
-            icon: 'fa-phone-alt'
+        const response = await fetch('/api/airtime', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ network, phone, amount, bankId })
         });
+        const result = await response.json();
+        if (!response.ok) {
+            airtimeMsg.textContent = '❌ ' + (result.error || 'Airtime purchase failed.');
+            airtimeMsg.style.color = '#e74c3c';
+            return;
+        }
 
-        airtimeMsg.textContent = 'âœ… Airtime for ' + network + ' (' + phone + ') purchased successfully!';
+        airtimeMsg.textContent = '✅ Airtime for ' + network + ' (' + phone + ') purchased successfully!';
         airtimeMsg.style.color = '#27ae60';
-        renderAll();
+        await loadUserData();
         populateAirtimeBankSelect();
         document.getElementById('airtimePhone').value = '';
         document.getElementById('airtimeAmount').value = '';
