@@ -19,7 +19,7 @@ async function submitAuthForm(form, endpoint, redirectTo) {
             ? await response.json()
             : { error: response.ok
                 ? 'The server returned an unexpected response.'
-                : `${endpoint.includes('register') ? 'Registration' : 'Login'} is unavailable. Check the Vercel deployment protection and server environment settings.` };
+                : `${endpoint.includes('register') ? 'Registration' : 'Login'} is unavailable. Check the Render service logs and environment settings.` };
 
         if (!response.ok) {
             throw new Error(result.error || 'Authentication failed.');

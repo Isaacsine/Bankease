@@ -8,6 +8,8 @@ const supabase = require('./supabase-client');
 const app = express();
 const port = process.env.PORT || 3000;
 const sevenDays = 7;
+const isProduction = process.env.NODE_ENV === 'production' || process.env.RENDER === 'true';
+const sessionSecret = process.env.SESSION_SECRET || (isProduction ? null : 'change-this-local-session-secret');
 const starterBanks = [
     { name: 'FNB', last_digits: '4589', balance: 0, full_name: 'First National Bank', account_type: 'cheque' },
     { name: 'Capitec', last_digits: '1234', balance: 0, full_name: 'Capitec Bank', account_type: 'savings' },
@@ -16,16 +18,21 @@ const starterBanks = [
     { name: 'Standard Bank', last_digits: '9012', balance: 0, full_name: 'Standard Bank', account_type: 'cheque' }
 ];
 
+app.set('trust proxy', 1);
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieSession({
     name: 'bankees.sid',
-    keys: [process.env.SESSION_SECRET || 'change-this-local-session-secret'],
+    keys: [sessionSecret || 'invalid-production-session-secret'],
     httpOnly: true,
     sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
+    secure: isProduction,
     maxAge: 1000 * 60 * 60 * 24 * sevenDays
 }));
+
+if (!sessionSecret) {
+    throw new Error('Configure SESSION_SECRET in the Render environment variables.');
+}
 
 function publicUser(user) {
     return { id: user.id, fullName: user.full_name, email: user.email, phone: user.phone, createdAt: user.created_at };
