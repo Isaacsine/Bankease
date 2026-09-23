@@ -12,20 +12,16 @@ const port = process.env.PORT || 3000;
 const sevenDays = 7;
 const isProduction = process.env.NODE_ENV === 'production' || process.env.RENDER === 'true';
 const sessionSecret = process.env.SESSION_SECRET || (isProduction ? null : 'change-this-local-session-secret');
-const starterBanks = [
-    { name: 'FNB', last_digits: '4589', balance: 0, full_name: 'First National Bank', account_type: 'cheque' },
-    { name: 'Capitec', last_digits: '1234', balance: 0, full_name: 'Capitec Bank', account_type: 'savings' },
-    { name: 'Absa', last_digits: '7890', balance: 0, full_name: 'Absa Bank', account_type: 'credit' },
-    { name: 'Nedbank', last_digits: '5678', balance: 0, full_name: 'Nedbank', account_type: 'savings' },
-    { name: 'Standard Bank', last_digits: '9012', balance: 0, full_name: 'Standard Bank', account_type: 'cheque' }
-];
-
 app.set('trust proxy', 1);
 app.disable('x-powered-by');
 app.use(helmet({
     contentSecurityPolicy: false,
     crossOriginEmbedderPolicy: false
 }));
+app.use((request, response, next) => {
+    response.setHeader('Content-Security-Policy', "frame-ancestors 'none'");
+    next();
+});
 app.use(express.json({ limit: '100kb' }));
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieSession({
@@ -98,11 +94,6 @@ async function findUserByEmail(email) {
     return data;
 }
 
-async function createStarterBanks(userId) {
-    const { error } = await supabase.from('banks').upsert(starterBanks.map(bank => ({ ...bank, user_id: userId })), { onConflict: 'user_id,name', ignoreDuplicates: true });
-    if (error) throw error;
-}
-
 function requireUser(request, response) {
     if (!request.session?.userId) {
         response.status(401).json({ error: 'Not logged in.' });
@@ -168,7 +159,6 @@ app.post('/api/register', async (request, response, next) => {
         const passwordHash = await bcrypt.hash(password, 12);
         const { data: user, error } = await supabase.from('users').insert({ full_name: fullName.trim(), email: email.trim().toLowerCase(), phone: phone.trim(), password_hash: passwordHash }).select().single();
         if (error) throw error;
-        await createStarterBanks(user.id);
         request.session.userId = user.id;
         await createUserSession(request, user.id);
         return response.status(201).json({ user: publicUser(user) });
@@ -283,7 +273,7 @@ app.post('/api/banks', async (request, response, next) => {
         if (!requireUser(request, response)) return;
         const { name, accountNumber, balance, accountType } = request.body || {};
         const numericBalance = balance === undefined || balance === '' ? 0 : Number(balance);
-        if (typeof name !== 'string' || !name.trim() || typeof accountNumber !== 'string' || !/^\d{4,}$/.test(accountNumber.replace(/\s/g, ''))) return response.status(400).json({ error: 'Enter a bank and a valid account number.' });
+        if (typeof name !== 'string' || !name.trim() || typeof accountNumber !== 'string' || !/^\d{4}$/.test(accountNumber.replace(/\s/g, ''))) return response.status(400).json({ error: 'Enter a bank and exactly the last 4 digits of the account or card.' });
         if (!Number.isFinite(numericBalance) || numericBalance < 0) return response.status(422).json({ error: 'Balance must be zero or greater.' });
         const bank = { user_id: request.session.userId, name: name.trim(), last_digits: accountNumber.replace(/\s/g, '').slice(-4), balance: numericBalance, full_name: name.trim(), account_type: accountType || 'savings' };
         const { data, error } = await supabase.from('banks').insert(bank).select('id,name,last_digits,balance,full_name,account_type').single();

@@ -421,7 +421,7 @@
     <div class="modal-overlay" id="addBankModal">
         <div class="modal">
             <h3>Add a Bank</h3>
-            <p>Select a bank and enter your card details.</p>
+            <p>Select an account and enter only its identifying details.</p>
             <label for="modalBankSelect">Bank</label>
             <select id="modalBankSelect" title="Bank to add" aria-label="Bank to add">
                 <option value="FNB">FNB</option>
@@ -432,12 +432,9 @@
                 <option value="TymeBank">TymeBank</option>
                 <option value="Bank Zero">Bank Zero</option>
             </select>
-            <label>Account / Card Number</label>
-            <input type="text" id="modalAccount" placeholder="e.g. 1234 5678 9012 3456">
-            <label>CVV</label>
-            <input type="text" id="modalCvv" placeholder="123" maxlength="4">
-            <label>Expiry Date</label>
-            <input type="text" id="modalExpiry" placeholder="MM/YY">
+            <label for="modalAccount">Last 4 digits</label>
+            <input type="text" id="modalAccount" placeholder="e.g. 3456" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" required>
+            <p class="form-hint">For security, Bankease does not collect full card numbers, CVV, PINs, or online banking passwords.</p>
             <label>Initial Balance (R)</label>
             <input type="number" id="modalBalance" placeholder="0.00" value="0">
             <label for="modalAccountType">Account Type</label>

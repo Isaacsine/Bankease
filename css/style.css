@@ -1232,3 +1232,19 @@ html.dark-mode .settings-row select {
     color: #edf2f4 !important;
     border-color: #3b4d59 !important;
 }
+
+.auth-trust-note {
+    max-width: 360px;
+    margin: 12px auto 20px;
+    color: #5d6870;
+    font-size: 12px;
+    line-height: 1.5;
+    text-align: center;
+}
+
+.form-hint {
+    color: #5d6870;
+    font-size: 12px;
+    line-height: 1.45;
+    margin: -4px 0 14px;
+}

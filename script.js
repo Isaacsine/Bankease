@@ -71,8 +71,6 @@
     const modalOverlay = document.getElementById('addBankModal');
     const modalBankSelect = document.getElementById('modalBankSelect');
     const modalAccount = document.getElementById('modalAccount');
-    const modalCvv = document.getElementById('modalCvv');
-    const modalExpiry = document.getElementById('modalExpiry');
     const modalBalance = document.getElementById('modalBalance');
     const modalAccountType = document.getElementById('modalAccountType');
     const modalConfirm = document.getElementById('modalConfirm');
@@ -303,7 +301,10 @@
     // ---------- ADD BANK ----------
     async function addBank() {
         const name = modalBankSelect.value;
-        const accountNum = modalAccount.value.trim() || '0000';
+        const accountNum = modalAccount.value.replace(/\s/g, '');
+        if (!/^\d{4}$/.test(accountNum)) {
+            return alert('Enter exactly the last 4 digits of the account or card.');
+        }
         const balance = parseFloat(modalBalance.value) || 0;
         const type = modalAccountType ? modalAccountType.value : 'Cheque Account';
         const fullName = name;
@@ -321,8 +322,6 @@
 
         // Clear fields
         modalAccount.value = '';
-        modalCvv.value = '';
-        modalExpiry.value = '';
         modalBalance.value = '0';
     }
 
