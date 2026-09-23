@@ -3,6 +3,8 @@ const express = require('express');
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const supabase = require('./supabase-client');
 
 const app = express();
@@ -19,7 +21,12 @@ const starterBanks = [
 ];
 
 app.set('trust proxy', 1);
-app.use(express.json());
+app.disable('x-powered-by');
+app.use(helmet({
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false
+}));
+app.use(express.json({ limit: '100kb' }));
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieSession({
     name: 'bankees.sid',
@@ -34,8 +41,54 @@ if (!sessionSecret) {
     throw new Error('Configure SESSION_SECRET in the Render environment variables.');
 }
 
+const apiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 300,
+    standardHeaders: 'draft-8',
+    legacyHeaders: false,
+    message: { error: 'Too many requests. Try again shortly.' }
+});
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 10,
+    standardHeaders: 'draft-8',
+    legacyHeaders: false,
+    message: { error: 'Too many authentication attempts. Try again later.' }
+});
+
+function sameOrigin(request) {
+    const origin = request.get('origin');
+    if (origin) return origin === `${request.protocol}://${request.get('host')}`;
+    const referer = request.get('referer');
+    if (referer) {
+        try { return new URL(referer).origin === `${request.protocol}://${request.get('host')}`; } catch { return false; }
+    }
+    return true;
+}
+
+app.use('/api', apiLimiter);
+app.use(['/api/login', '/api/register', '/api/forgot-password', '/api/reset-password'], authLimiter);
+app.use('/api', (request, response, next) => {
+    if (['GET', 'HEAD', 'OPTIONS'].includes(request.method) || sameOrigin(request)) return next();
+    return response.status(403).json({ error: 'Cross-site request blocked.' });
+});
+app.use('/api', async (request, response, next) => {
+    try {
+        if (!request.session?.userId || !request.session?.sessionId) return next();
+        const { data: session, error } = await supabase.from('user_sessions').select('id').eq('id', request.session.sessionId).eq('user_id', request.session.userId).eq('is_active', true).maybeSingle();
+        if (error) throw error;
+        if (!session) {
+            request.session = null;
+            return next();
+        }
+        const { error: updateError } = await supabase.from('user_sessions').update({ last_seen_at: new Date().toISOString() }).eq('id', session.id);
+        if (updateError) throw updateError;
+        return next();
+    } catch (error) { return next(error); }
+});
+
 function publicUser(user) {
-    return { id: user.id, fullName: user.full_name, email: user.email, phone: user.phone, createdAt: user.created_at };
+    return { id: user.id, fullName: user.full_name, email: user.email, phone: user.phone, role: user.role, status: user.status, createdAt: user.created_at };
 }
 
 async function findUserByEmail(email) {
@@ -51,7 +104,7 @@ async function createStarterBanks(userId) {
 }
 
 function requireUser(request, response) {
-    if (!request.session.userId) {
+    if (!request.session?.userId) {
         response.status(401).json({ error: 'Not logged in.' });
         return false;
     }
@@ -64,6 +117,37 @@ function passwordResetTokenHash(token) {
 
 function passwordIsValid(password) {
     return typeof password === 'string' && password.length >= 8;
+}
+
+async function recordAudit(actorUserId, action, targetUserId, metadata = {}) {
+    const { error } = await supabase.from('audit_logs').insert({ actor_user_id: actorUserId, action, target_user_id: targetUserId || null, metadata });
+    if (error) throw error;
+}
+
+async function createUserSession(request, userId) {
+    const { data: session, error } = await supabase.from('user_sessions').insert({
+        user_id: userId,
+        ip_address: request.ip,
+        user_agent: request.get('user-agent') || null
+    }).select('id').single();
+    if (error) throw error;
+    request.session.sessionId = session.id;
+}
+
+async function requireAdmin(request, response) {
+    if (!requireUser(request, response)) return null;
+    const { data: user, error } = await supabase.from('users').select('id,role,status').eq('id', request.session.userId).maybeSingle();
+    if (error) throw error;
+    if (!user || user.status !== 'active') {
+        request.session = null;
+        response.status(401).json({ error: 'Your account is inactive.' });
+        return null;
+    }
+    if (user.role !== 'admin') {
+        response.status(403).json({ error: 'Administrator access is required.' });
+        return null;
+    }
+    return user;
 }
 
 app.get('/api/health', async (request, response, next) => {
@@ -86,16 +170,25 @@ app.post('/api/register', async (request, response, next) => {
         if (error) throw error;
         await createStarterBanks(user.id);
         request.session.userId = user.id;
+        await createUserSession(request, user.id);
         return response.status(201).json({ user: publicUser(user) });
     } catch (error) { return next(error); }
 });
 
 app.post('/api/login', async (request, response, next) => {
     try {
-        const { email, password } = request.body || {};
+        const { email, password, loginMode = 'user' } = request.body || {};
+        if (!['user', 'admin'].includes(loginMode)) return response.status(400).json({ error: 'Login type is invalid.' });
         const user = await findUserByEmail(email);
         if (!user || typeof password !== 'string' || !(await bcrypt.compare(password, user.password_hash))) return response.status(401).json({ error: 'Email or password is incorrect.' });
+        if (user.status === 'suspended') return response.status(403).json({ error: 'This account is suspended.' });
+        if (loginMode === 'admin' && user.role !== 'admin') return response.status(403).json({ error: 'This account does not have administrator access.' });
+        if (loginMode === 'user' && user.role === 'admin') return response.status(403).json({ error: 'Choose Admin login for this account.' });
         request.session = { userId: user.id };
+        const loggedInAt = new Date().toISOString();
+        const { error: updateError } = await supabase.from('users').update({ last_login_at: loggedInAt }).eq('id', user.id);
+        if (updateError) throw updateError;
+        await createUserSession(request, user.id);
         return response.json({ user: publicUser(user) });
     } catch (error) { return next(error); }
 });
@@ -112,6 +205,8 @@ app.post('/api/change-password', async (request, response, next) => {
         const passwordHash = await bcrypt.hash(newPassword, 12);
         const { error } = await supabase.from('users').update({ password_hash: passwordHash }).eq('id', request.session.userId);
         if (error) throw error;
+        const { error: sessionError } = await supabase.from('user_sessions').update({ is_active: false }).eq('user_id', request.session.userId).neq('id', request.session.sessionId || '00000000-0000-0000-0000-000000000000');
+        if (sessionError) throw sessionError;
         return response.json({ message: 'Password updated successfully.' });
     } catch (error) { return next(error); }
 });
@@ -145,13 +240,21 @@ app.post('/api/reset-password', async (request, response, next) => {
         const passwordHash = await bcrypt.hash(newPassword, 12);
         const { error: updateError } = await supabase.from('users').update({ password_hash: passwordHash }).eq('id', resetToken.user_id);
         if (updateError) throw updateError;
+        const { error: sessionError } = await supabase.from('user_sessions').update({ is_active: false }).eq('user_id', resetToken.user_id);
+        if (sessionError) throw sessionError;
         const { error: deleteError } = await supabase.from('password_reset_tokens').delete().eq('id', resetToken.id);
         if (deleteError) throw deleteError;
         return response.json({ message: 'Password updated successfully.' });
     } catch (error) { return next(error); }
 });
 
-app.post('/api/logout', (request, response) => {
+app.post('/api/logout', async (request, response, next) => {
+    try {
+        if (request.session?.sessionId) {
+            const { error } = await supabase.from('user_sessions').update({ is_active: false }).eq('id', request.session.sessionId);
+            if (error) throw error;
+        }
+    } catch (error) { return next(error); }
     request.session = null;
     return response.status(204).end();
 });
@@ -244,6 +347,93 @@ app.get('/api/transactions', async (request, response, next) => {
         const { data: transactions, error } = await supabase.from('transactions').select('*').eq('user_id', request.session.userId).order('created_at', { ascending: false });
         if (error) throw error;
         return response.json({ transactions });
+    } catch (error) { return next(error); }
+});
+
+app.get('/api/admin/overview', async (request, response, next) => {
+    try {
+        if (!await requireAdmin(request, response)) return;
+        const [{ count: totalUsers }, { count: activeUsers }, { count: suspendedUsers }, { count: activeSessions }, { data: transactions, error: transactionError }, { count: auditEvents }] = await Promise.all([
+            supabase.from('users').select('id', { count: 'exact', head: true }),
+            supabase.from('users').select('id', { count: 'exact', head: true }).eq('status', 'active'),
+            supabase.from('users').select('id', { count: 'exact', head: true }).eq('status', 'suspended'),
+            supabase.from('user_sessions').select('id', { count: 'exact', head: true }).eq('is_active', true),
+            supabase.from('transactions').select('amount'),
+            supabase.from('audit_logs').select('id', { count: 'exact', head: true })
+        ]);
+        if (transactionError) throw transactionError;
+        const transactionVolume = (transactions || []).reduce((total, transaction) => total + Math.abs(Number(transaction.amount) || 0), 0);
+        return response.json({ stats: { totalUsers: totalUsers || 0, activeUsers: activeUsers || 0, suspendedUsers: suspendedUsers || 0, activeSessions: activeSessions || 0, transactionVolume }, security: { auditEvents: auditEvents || 0 }, analytics: { transactionCount: (transactions || []).length } });
+    } catch (error) { return next(error); }
+});
+
+app.get('/api/admin/users', async (request, response, next) => {
+    try {
+        if (!await requireAdmin(request, response)) return;
+        const { data: users, error } = await supabase.from('users').select('id,full_name,email,phone,role,status,last_login_at,created_at').order('created_at', { ascending: false });
+        if (error) throw error;
+        return response.json({ users });
+    } catch (error) { return next(error); }
+});
+
+app.post('/api/admin/admins', async (request, response, next) => {
+    try {
+        const admin = await requireAdmin(request, response);
+        if (!admin) return;
+        const { fullName, email, phone, password, confirmPassword } = request.body || {};
+        if ([fullName, email, phone, password, confirmPassword].some(value => typeof value !== 'string' || !value.trim())) return response.status(400).json({ error: 'Complete every admin account field.' });
+        if (password !== confirmPassword) return response.status(400).json({ error: 'Passwords do not match.' });
+        if (!passwordIsValid(password)) return response.status(422).json({ error: 'The temporary password must be at least 8 characters.' });
+        if (await findUserByEmail(email)) return response.status(409).json({ error: 'An account with that email already exists.' });
+        const passwordHash = await bcrypt.hash(password, 12);
+        const { data: user, error } = await supabase.from('users').insert({ full_name: fullName.trim(), email: email.trim().toLowerCase(), phone: phone.trim(), password_hash: passwordHash, role: 'admin', status: 'active' }).select('id,full_name,email,phone,role,status,created_at').single();
+        if (error) throw error;
+        await recordAudit(admin.id, 'admin_created', user.id, { email: user.email });
+        return response.status(201).json({ user });
+    } catch (error) { return next(error); }
+});
+
+app.patch('/api/admin/users/:id', async (request, response, next) => {
+    try {
+        const admin = await requireAdmin(request, response);
+        if (!admin) return;
+        const { status } = request.body || {};
+        if (!['active', 'suspended'].includes(status)) return response.status(400).json({ error: 'User status is invalid.' });
+        if (request.params.id === admin.id) return response.status(400).json({ error: 'You cannot change your own status.' });
+        const { data: target, error: targetError } = await supabase.from('users').select('id,role,status').eq('id', request.params.id).maybeSingle();
+        if (targetError) throw targetError;
+        if (!target) return response.status(404).json({ error: 'User was not found.' });
+        if (target.role === 'admin') return response.status(403).json({ error: 'Administrator accounts cannot be changed here.' });
+        const { data: user, error } = await supabase.from('users').update({ status }).eq('id', target.id).select('id,full_name,email,role,status').single();
+        if (error) throw error;
+        await recordAudit(admin.id, `user_${status}`, target.id, { previousStatus: target.status });
+        return response.json({ user });
+    } catch (error) { return next(error); }
+});
+
+app.get('/api/admin/sessions', async (request, response, next) => {
+    try {
+        if (!await requireAdmin(request, response)) return;
+        const { data: sessions, error } = await supabase.from('user_sessions').select('id,user_id,login_at,last_seen_at,ip_address,user_agent,is_active').order('last_seen_at', { ascending: false }).limit(100);
+        if (error) throw error;
+        const userIds = [...new Set((sessions || []).map(session => session.user_id))];
+        const { data: users, error: userError } = userIds.length ? await supabase.from('users').select('id,full_name,email').in('id', userIds) : { data: [], error: null };
+        if (userError) throw userError;
+        const userMap = new Map((users || []).map(user => [user.id, user]));
+        return response.json({ sessions: (sessions || []).map(session => ({ ...session, user: userMap.get(session.user_id) || null })) });
+    } catch (error) { return next(error); }
+});
+
+app.get('/api/admin/audit', async (request, response, next) => {
+    try {
+        if (!await requireAdmin(request, response)) return;
+        const { data: audit, error } = await supabase.from('audit_logs').select('id,actor_user_id,target_user_id,action,metadata,created_at').order('created_at', { ascending: false }).limit(100);
+        if (error) throw error;
+        const userIds = [...new Set((audit || []).flatMap(log => [log.actor_user_id, log.target_user_id]).filter(Boolean))];
+        const { data: users, error: userError } = userIds.length ? await supabase.from('users').select('id,full_name,email').in('id', userIds) : { data: [], error: null };
+        if (userError) throw userError;
+        const userMap = new Map((users || []).map(user => [user.id, user]));
+        return response.json({ audit: (audit || []).map(log => ({ ...log, actor: userMap.get(log.actor_user_id) || null, target: userMap.get(log.target_user_id) || null })) });
     } catch (error) { return next(error); }
 });
 

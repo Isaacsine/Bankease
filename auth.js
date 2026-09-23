@@ -37,7 +37,9 @@ async function submitAuthForm(form, endpoint, redirectTo) {
             submitButton.disabled = false;
             return;
         }
-        if (redirectTo) window.location.href = redirectTo;
+        if (redirectTo) {
+            window.location.href = result.user?.role === 'admin' ? 'admin/' : redirectTo;
+        }
     } catch (error) {
         message.textContent = error.message;
         message.className = 'form-message error';
@@ -47,6 +49,14 @@ async function submitAuthForm(form, endpoint, redirectTo) {
 
 const loginForm = document.getElementById('loginForm');
 if (loginForm) {
+    document.querySelectorAll('[data-login-mode]').forEach((option) => {
+        option.addEventListener('click', () => {
+            document.querySelectorAll('[data-login-mode]').forEach((item) => item.classList.toggle('active', item === option));
+            loginForm.elements.loginMode.value = option.dataset.loginMode;
+            document.getElementById('userSignupPrompt')?.classList.toggle('hidden', option.dataset.loginMode === 'admin');
+            document.getElementById('adminLoginNote')?.classList.toggle('visible', option.dataset.loginMode === 'admin');
+        });
+    });
     loginForm.addEventListener('submit', (event) => {
         event.preventDefault();
         submitAuthForm(loginForm, '/api/login', 'dashboard.html');

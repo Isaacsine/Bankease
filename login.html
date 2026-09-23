@@ -23,7 +23,12 @@
             </a>
             <h2 class="auth-heading">Welcome Back</h2>
             <p class="auth-subtitle">Sign in to manage all your banks</p>
+            <div class="login-mode" role="group" aria-label="Choose login type">
+                <button type="button" class="login-mode-option active" data-login-mode="user">User login</button>
+                <button type="button" class="login-mode-option" data-login-mode="admin">Admin login</button>
+            </div>
             <form id="loginForm">
+                <input id="loginMode" name="loginMode" type="hidden" value="user">
                 <label for="loginEmail">Email</label>
                 <input id="loginEmail" name="email" type="email" placeholder="you@email.com" autocomplete="email" required />
                 <label for="loginPassword">Password</label>
@@ -32,7 +37,8 @@
                 <button type="submit" class="btn-primary auth-submit">Sign In</button>
             </form>
             <p class="auth-footer"><a href="forgot-password.html">Forgot your password?</a></p>
-            <p class="auth-footer">Don't have an account? <a href="register.html">Sign Up</a></p>
+            <p class="auth-footer" id="userSignupPrompt">Don't have an account? <a href="register.html">Sign Up</a></p>
+            <p class="auth-footer admin-login-note" id="adminLoginNote">Admin accounts are created by an existing administrator.</p>
         </div>
     </div>
     <script src="i18n.js"></script>

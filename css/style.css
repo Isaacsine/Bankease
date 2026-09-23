@@ -702,6 +702,33 @@ label {
     margin-bottom: 24px;
 }
 
+.login-mode {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    padding: 4px;
+    margin-bottom: 24px;
+    border: 1px solid #e5e5eb;
+    border-radius: 12px;
+    background: #f7f7fa;
+}
+
+.login-mode-option {
+    border: 0;
+    border-radius: 8px;
+    padding: 10px 8px;
+    background: transparent;
+    color: #7b7b8d;
+    cursor: pointer;
+    font: 600 12px inherit;
+}
+
+.login-mode-option.active {
+    background: #fff;
+    color: #1a1a2e;
+    box-shadow: 0 2px 8px rgba(26, 26, 46, 0.08);
+}
+
 .auth-submit {
     width: 100%;
     padding: 14px;
@@ -714,6 +741,18 @@ label {
     text-align: center;
     margin-top: 16px;
     color: #7b7b8d;
+}
+
+.admin-login-note {
+    display: none;
+}
+
+.admin-login-note.visible {
+    display: block;
+}
+
+.auth-footer.hidden {
+    display: none;
 }
 
 .auth-footer a {
