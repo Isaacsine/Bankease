@@ -812,8 +812,8 @@
 
         <!-- PAGE TITLE -->
         <div class="page-title-block">
-            <h2>Your Cards</h2>
-            <p>Manage your Bankease SmartCard and linked bank cards</p>
+            <h2>Account view</h2>
+            <p>Review your connected accounts and activity</p>
         </div>
 
         <div class="content-shell">
@@ -823,7 +823,7 @@
                 <div class="card-wrapper auto-rotate" id="cardWrapper">
                     <!-- FRONT -->
                     <div class="card-3d" id="cardFront">
-                        <img class="card-artwork" src="assets/card.png" alt="Bankease SmartCard">
+                        <img class="card-artwork" src="assets/card.png" alt="Bankease account view preview">
                         <div class="card-holder-overlay" id="cardHolderName">CARDHOLDER</div>
                         <div class="card-overlay-content" aria-hidden="true">
                         <div class="card-top">
@@ -831,17 +831,17 @@
                                 <div class="card-brand-icon">B</div>
                                 <div>
                                     <div class="card-brand-name">BANKE<span class="highlight">ASE</span></div>
-                                    <div class="card-brand-sub">ONE CARD. ALL BANKS.</div>
+                                    <div class="card-brand-sub">MONEY MANAGEMENT, ONE PLACE</div>
                                 </div>
                             </div>
                             <div class="card-chip">
                                 <div class="chip-icon"></div>
-                                <div class="card-network">VISA</div>
+                                <div class="card-network">VIEW</div>
                             </div>
                         </div>
 
                         <div class="card-number-section">
-                            <div class="card-number-label">CARD NUMBER</div>
+                            <div class="card-number-label">ACCOUNT VIEW PREVIEW</div>
                             <div class="card-number">**** **** **** ****</div>
                         </div>
 
@@ -849,16 +849,16 @@
 
                         <div class="card-bottom">
                             <div class="card-holder">
-                                <div class="card-holder-label">CARDHOLDER</div>
+                                <div class="card-holder-label">ACCOUNT HOLDER</div>
                                 <div class="card-holder-name">Cardholder</div>
                             </div>
                             <div class="card-expiry">
-                                <div class="card-expiry-label">EXPIRY</div>
+                                <div class="card-expiry-label">CONNECTED</div>
                                 <div class="card-expiry-date">--/--</div>
                             </div>
                         </div>
 
-                        <div class="card-type-badge">SMARTCARD</div>
+                        <div class="card-type-badge">PREVIEW</div>
                         </div>
                     </div>
 
@@ -868,7 +868,7 @@
                         <div class="card-back-cvv">
                             <div class="card-back-cvv-wrap">
                                 <div class="card-back-cvv-row">
-                                    <span class="card-back-cvv-label">CVV</span>
+                                    <span class="card-back-cvv-label">SECURITY</span>
                                     <div class="card-back-cvv-box">---</div>
                                 </div>
                             </div>
@@ -903,8 +903,8 @@
             <div class="smartcard-status-card">
                 <div class="smartcard-status-header">
                     <div>
-                        <div class="smartcard-status-name">Bankease SmartCard</div>
-                        <div class="smartcard-status-number">BK245678901234</div>
+                        <div class="smartcard-status-name">Bankease account view</div>
+                        <div class="smartcard-status-number">No card number stored</div>
                     </div>
                     <div>
                         <span class="card-status-badge active" id="smartcardStatus"><i class="fas fa-circle card-status-dot"></i> Active</span>
@@ -912,27 +912,27 @@
                 </div>
                 <div class="status-metrics">
                     <div>
-                        <div class="metric-label">Limit</div>
+                        <div class="metric-label">Accounts</div>
                         <div class="metric-value" id="cardLimit">R50,000.00</div>
                     </div>
                     <div>
-                        <div class="metric-label">Used</div>
+                        <div class="metric-label">Tracked outflow</div>
                         <div class="metric-value" id="cardUsed">R0.00</div>
                     </div>
                     <div>
-                        <div class="metric-label">Available</div>
+                        <div class="metric-label">Combined balance</div>
                         <div class="metric-value available" id="cardAvailable">R50,000.00</div>
                     </div>
                 </div>
             </div>
 
             <!-- Linked Cards -->
-            <h4 class="cards-heading">Linked Bank Cards</h4>
+            <h4 class="cards-heading">Linked Accounts</h4>
             <div class="linked-cards-grid" id="linkedCardsList"></div>
 
             <!-- Add Card Button -->
             <button class="add-card-btn" onclick="location.href='linked-accounts.html'">
-                <i class="fas fa-plus-circle"></i> Link New Card
+                <i class="fas fa-plus-circle"></i> Link New Account
             </button>
         </div>
 
@@ -1178,12 +1178,12 @@
             const user = (await userResponse.json()).user;
             const banks = (await banksResponse.json()).banks;
             const transactions = (await transactionsResponse.json()).transactions;
-            const limit = 50000;
             const used = transactions.filter(transaction => Number(transaction.amount) < 0).reduce((total, transaction) => total + Math.abs(Number(transaction.amount)), 0);
+            const combinedBalance = banks.reduce((total, bank) => total + Number(bank.balance || 0), 0);
             document.getElementById('cardHolderName').textContent = user.fullName;
-            document.getElementById('cardLimit').textContent = cardMoney(limit);
+            document.getElementById('cardLimit').textContent = banks.length;
             document.getElementById('cardUsed').textContent = cardMoney(used);
-            document.getElementById('cardAvailable').textContent = cardMoney(Math.max(0, limit - used));
+            document.getElementById('cardAvailable').textContent = cardMoney(combinedBalance);
             const status = document.getElementById('smartcardStatus');
             status.className = 'card-status-badge ' + (banks.length ? 'active' : 'inactive');
             status.innerHTML = '<i class="fas fa-circle card-status-dot"></i> ' + (banks.length ? 'Active' : 'Inactive');

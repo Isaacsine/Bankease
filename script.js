@@ -424,7 +424,7 @@
                 </div>
                 
                 <div style="font-size:13px;color:#7b7b8d;margin-bottom:12px;">
-                    Use ${bank.name} with your Bankease SmartCard
+                    View activity and actions for this connected account
                 </div>
                 
                 <div class="bank-detail-actions">

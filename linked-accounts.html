@@ -335,7 +335,7 @@
                 <a class="back-link" href="settings.html" aria-label="Back to settings"><i class="fas fa-arrow-left"></i></a>
                 <div>
                     <h2>Linked accounts</h2>
-                    <p>Add accounts for your Bankease SmartCard or remove ones you no longer use.</p>
+                    <p>Add supported accounts to your Bankease view or remove ones you no longer use.</p>
                 </div>
             </div>
 
@@ -364,8 +364,9 @@
                         </select>
                     </div>
                     <div class="form-field">
-                        <label for="accountNumber">Account or card number</label>
-                        <input id="accountNumber" name="accountNumber" type="text" inputmode="numeric" autocomplete="off" placeholder="e.g. 1234 5678 9012 3456" required />
+                        <label for="accountNumber">Last 4 digits</label>
+                        <input id="accountNumber" name="accountNumber" type="text" inputmode="numeric" autocomplete="off" maxlength="4" pattern="[0-9]{4}" placeholder="e.g. 3456" required />
+                        <small class="field-hint">Never enter a full account number, PIN, password, or CVV.</small>
                     </div>
                     <div class="form-field">
                         <label for="accountType">Account type</label>
