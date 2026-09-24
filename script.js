@@ -7,11 +7,11 @@
     let banks = [];
     let selectedId = null;
     let transactions = [
-        { title: 'ATM Withdrawal', bank: 'FNB **** 4589', amount: -1000, time: 'Today, 10:45 AM', icon: 'fa-money-bill-wave' },
-        { title: 'POS Purchase', bank: 'Capitec **** 1234', amount: -250, time: 'Yesterday, 4:30 PM', icon: 'fa-shopping-cart' },
-        { title: 'Salary Deposit', bank: 'FNB **** 4589', amount: 12500, time: 'Yesterday, 9:00 AM', icon: 'fa-wallet' },
-        { title: 'Transfer to FNB', bank: 'Capitec **** 1234', amount: -1000, time: 'Dec 14, 2024', icon: 'fa-exchange-alt' },
-        { title: 'Spar Purchase', bank: 'FNB **** 4589', amount: -245.50, time: 'Today, 14:32', icon: 'fa-shopping-bag' }
+        { title: 'ATM Withdrawal', bank: 'FNB *****', amount: -1000, time: 'Today, 10:45 AM', icon: 'fa-money-bill-wave' },
+        { title: 'POS Purchase', bank: 'Capitec *****', amount: -250, time: 'Yesterday, 4:30 PM', icon: 'fa-shopping-cart' },
+        { title: 'Salary Deposit', bank: 'FNB *****', amount: 12500, time: 'Yesterday, 9:00 AM', icon: 'fa-wallet' },
+        { title: 'Transfer to FNB', bank: 'Capitec *****', amount: -1000, time: 'Dec 14, 2024', icon: 'fa-exchange-alt' },
+        { title: 'Spar Purchase', bank: 'FNB *****', amount: -245.50, time: 'Today, 14:32', icon: 'fa-shopping-bag' }
     ];
 
     const bankStyles = {
@@ -124,7 +124,7 @@
         if (totalBalanceEl) totalBalanceEl.textContent = formatCurrency(total);
         if (accountCountEl) accountCountEl.textContent = 'Across ' + banks.length + ' accounts';
         const active = banks.find(b => b.id === selectedId);
-        if (activeBankNameEl) activeBankNameEl.textContent = active ? active.name + ' **** ' + active.lastDigits : 'â€”';
+        if (activeBankNameEl) activeBankNameEl.textContent = active ? active.name + ' *****' : 'â€”';
     }
 
     function getActiveBank() {

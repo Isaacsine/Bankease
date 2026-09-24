@@ -431,7 +431,7 @@
                     <div class="account-mark" aria-label="${bank.name} logo">${renderBankMark(bank)}</div>
                     <div class="account-info">
                         <div class="account-name">${bank.name}</div>
-                        <div class="account-details">${bank.account_type} | **** ${bank.last_digits}</div>
+                        <div class="account-details">${bank.account_type} | *****</div>
                     </div>
                     <div class="account-balance">R${Number(bank.balance).toFixed(2)}</div>
                     <button class="remove-account" data-id="${bank.id}" aria-label="Remove ${bank.name} account" title="Remove account"><i class="fas fa-trash-alt"></i></button>

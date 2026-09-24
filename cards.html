@@ -842,7 +842,7 @@
 
                         <div class="card-number-section">
                             <div class="card-number-label">ACCOUNT VIEW PREVIEW</div>
-                            <div class="card-number">**** **** **** ****</div>
+                            <div class="card-number">*****</div>
                         </div>
 
                         <div class="card-banks" id="cardBanks"></div>
@@ -1192,8 +1192,8 @@
                 const logo = cardLogos[bank.name];
                 const activity = transactions.some(transaction => transaction.from_bank_id === bank.id || transaction.to_bank_id === bank.id);
                 const icon = logo ? '<img src="' + logo + '" alt="' + cardEscape(bank.name) + ' logo" style="width:40px;height:40px;object-fit:contain;border-radius:50%;background:#fff;">' : cardEscape(bank.name.charAt(0));
-                return '<div class="linked-card-item"><div class="left"><div class="linked-card-avatar">' + icon + '</div><div><div class="bank">' + cardEscape(bank.name) + '</div><div class="number">â€¢â€¢â€¢â€¢ ' + cardEscape(bank.last_digits) + '</div></div></div><span class="card-status-badge ' + (Number(bank.balance) > 0 || activity ? 'active' : 'inactive') + '">' + (Number(bank.balance) > 0 || activity ? 'Active' : 'Inactive') + '</span></div>';
-            }).join('') : '<p>No linked bank cards yet.</p>';
+                return '<div class="linked-card-item"><div class="left"><div class="linked-card-avatar">' + icon + '</div><div><div class="bank">' + cardEscape(bank.name) + '</div><div class="number">*****</div></div></div><span class="card-status-badge ' + (Number(bank.balance) > 0 || activity ? 'active' : 'inactive') + '">' + (Number(bank.balance) > 0 || activity ? 'Active' : 'Inactive') + '</span></div>';
+            }).join('') : '<p>No linked accounts yet.</p>';
         }).catch(() => { window.location.href = 'login.html'; });
     </script>
 </body>
