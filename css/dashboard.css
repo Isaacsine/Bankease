@@ -165,3 +165,376 @@
         font-size: 13px;
     }
 }
+
+.balance-card {
+    position: relative;
+}
+
+.privacy-toggle {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 34px;
+    height: 34px;
+    border: 1px solid #e8ebef;
+    border-radius: 50%;
+    background: #fff;
+    color: #7b7b8d;
+    cursor: pointer;
+}
+
+.privacy-toggle:hover {
+    color: #1a1a2e;
+    border-color: #cfd5dc;
+}
+
+.privacy-mode .sensitive-value {
+    filter: blur(8px);
+    user-select: none;
+}
+
+.money-pulse {
+    background: linear-gradient(135deg, #172b3a, #25495a);
+    border-radius: 18px;
+    padding: 18px;
+    margin-bottom: 16px;
+    color: #fff;
+    box-shadow: 0 8px 20px rgba(23, 43, 58, 0.16);
+}
+
+.money-pulse-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.pulse-kicker {
+    color: #a7d8c8;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+}
+
+.money-pulse h3 {
+    margin-top: 4px;
+    font-size: 18px;
+    color: #fff;
+}
+
+.pulse-score {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 48px;
+    height: 48px;
+    border: 1px solid rgba(167, 216, 200, 0.55);
+    border-radius: 50%;
+    color: #a7d8c8;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.pulse-insight {
+    min-height: 36px;
+    margin: 14px 0;
+    color: #d9e7e8;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.pulse-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.pulse-stats > div {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.pulse-stat-label {
+    color: #a9bdc4;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.pulse-stats strong {
+    color: #fff;
+    font-size: 14px;
+}
+
+.financial-tools {
+    display: grid;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.safe-spend-panel,
+.tool-panel {
+    background: #fff;
+    border: 1px solid #edf0f2;
+    border-radius: 16px;
+    padding: 16px;
+}
+
+.safe-spend-panel {
+    background: #f0faf6;
+    border-color: #d3eee2;
+}
+
+.tool-heading,
+.tool-panel-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.tool-heading {
+    justify-content: flex-start;
+}
+
+.tool-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+}
+
+.tool-icon.mint {
+    background: #d3eee2;
+    color: #147d5a;
+}
+
+.tool-kicker {
+    display: block;
+    color: #7b7b8d;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.safe-spend-panel h3,
+.tool-panel h3 {
+    margin-top: 3px;
+    color: #1a1a2e;
+    font-size: 18px;
+}
+
+.safe-spend-panel p,
+.tool-empty {
+    color: #7b7b8d;
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.safe-spend-panel p {
+    margin: 12px 0 5px;
+}
+
+.commitment-count,
+.tool-meta {
+    color: #147d5a;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.tool-meta {
+    color: #7b7b8d;
+    text-align: right;
+}
+
+.category-list,
+.planning-list {
+    margin-top: 12px;
+}
+
+.category-row,
+.planning-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-top: 1px solid #f1f3f4;
+}
+
+.category-row:first-child,
+.planning-item:first-child {
+    border-top: none;
+}
+
+.category-name,
+.planning-item-name {
+    min-width: 78px;
+    color: #1a1a2e;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.category-track {
+    flex: 1;
+    height: 6px;
+    overflow: hidden;
+    border-radius: 99px;
+    background: #eef1f3;
+}
+
+.category-fill {
+    height: 100%;
+    border-radius: inherit;
+    background: #e67e22;
+}
+
+.category-amount,
+.planning-item-amount {
+    min-width: 66px;
+    color: #1a1a2e;
+    font-size: 12px;
+    font-weight: 700;
+    text-align: right;
+}
+
+.inline-tool-form {
+    display: grid;
+    grid-template-columns: 1fr 86px 34px;
+    gap: 6px;
+    margin-top: 12px;
+}
+
+.inline-tool-form input {
+    min-width: 0;
+    width: 100%;
+    padding: 9px 8px;
+    border: 1px solid #e1e6e9;
+    border-radius: 8px;
+    color: #1a1a2e;
+    font-size: 12px;
+}
+
+.inline-tool-form button,
+.planning-remove {
+    border: 0;
+    border-radius: 8px;
+    background: #172b3a;
+    color: #fff;
+    cursor: pointer;
+}
+
+.planning-item {
+    justify-content: space-between;
+}
+
+.planning-item-details {
+    min-width: 0;
+    flex: 1;
+}
+
+.planning-item-sub {
+    display: block;
+    margin-top: 2px;
+    color: #7b7b8d;
+    font-size: 10px;
+}
+
+.planning-remove {
+    width: 26px;
+    height: 26px;
+    background: transparent;
+    color: #a4adb3;
+}
+
+.planning-remove:hover {
+    color: #e74c3c;
+}
+
+.drag-target {
+    border-color: #e67e22;
+    background: #fff8f0;
+    transform: translateY(-2px);
+}
+
+.bank-item[draggable="true"] {
+    cursor: grab;
+    touch-action: none;
+}
+
+.bank-item.dragging {
+    opacity: 0.5;
+}
+
+.bank-item.long-pressing {
+    transform: scale(0.98);
+    box-shadow: 0 0 0 3px rgba(230, 126, 34, 0.2);
+}
+
+.drop-transfer-prompt {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: -2px 0 10px;
+    padding: 10px 12px;
+    border: 1px solid #f2d3af;
+    border-radius: 12px;
+    background: #fff8f0;
+    color: #8a4b0f;
+    font-size: 12px;
+}
+
+.drop-transfer-prompt > div {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    flex: 1;
+}
+
+.drop-transfer-prompt button {
+    flex-shrink: 0;
+    border: 0;
+    border-radius: 7px;
+    padding: 7px 10px;
+    background: #e67e22;
+    color: #fff;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.drop-transfer-prompt .drop-transfer-cancel {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    background: transparent;
+    color: #8a4b0f;
+}
+
+@media (min-width: 768px) {
+    .financial-tools {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .safe-spend-panel {
+        grid-column: span 2;
+    }
+}
+
+.service-availability {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 12px 0;
+    color: #147d5a;
+    font-size: 12px;
+}
+
+.service-availability.pending {
+    color: #a36200;
+}

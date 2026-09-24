@@ -38,8 +38,9 @@
             <div class="left-column">
                 <!-- Balance Card -->
                 <div class="balance-card" id="balanceCard">
+                    <button class="privacy-toggle" id="privacyToggle" type="button" aria-label="Hide balances" title="Hide balances"><i class="fas fa-eye-slash"></i></button>
                     <div class="balance-label">TOTAL BALANCE</div>
-                    <div class="balance-amount" id="totalBalance">R0.00</div>
+                    <div class="balance-amount sensitive-value" id="totalBalance">R0.00</div>
                     <div class="balance-sub" id="accountCount">Across 0 accounts</div>
                     <div class="balance-footer">
                         <div class="active-bank">
@@ -55,10 +56,53 @@
                     </div>
                 </div>
 
+                <section class="money-pulse" aria-labelledby="moneyPulseTitle">
+                    <div class="money-pulse-header">
+                        <div>
+                            <span class="pulse-kicker"><i class="fas fa-sparkles"></i> BANK EASE PULSE</span>
+                            <h3 id="moneyPulseTitle">Your money at a glance</h3>
+                        </div>
+                        <span class="pulse-score" id="pulseScore">--</span>
+                    </div>
+                    <p class="pulse-insight" id="pulseInsight">Loading your financial snapshot...</p>
+                    <div class="pulse-stats">
+                        <div><span class="pulse-stat-label">30-day in</span><strong class="sensitive-value" id="pulseIncome">R0.00</strong></div>
+                        <div><span class="pulse-stat-label">30-day out</span><strong class="sensitive-value" id="pulseSpending">R0.00</strong></div>
+                        <div><span class="pulse-stat-label">Activity</span><strong id="pulseActivity">0</strong></div>
+                    </div>
+                </section>
+
+                <section class="financial-tools" aria-label="Money planning tools">
+                    <div class="safe-spend-panel">
+                        <div class="tool-heading"><span class="tool-icon mint"><i class="fas fa-shield-heart"></i></span><div><span class="tool-kicker">SAFE TO SPEND</span><h3 id="safeToSpend">R0.00</h3></div></div>
+                        <p id="safeSpendCaption">Your balance after upcoming commitments.</p>
+                        <span class="commitment-count" id="commitmentCount">No upcoming commitments</span>
+                    </div>
+                    <div class="tool-panel category-panel">
+                        <div class="tool-panel-heading"><div><span class="tool-kicker">SPENDING MAP</span><h3>This month</h3></div><span class="tool-meta" id="salaryInsight">No salary pattern yet</span></div>
+                        <div id="spendingCategories" class="category-list"><p class="tool-empty">Your categories will appear as you transact.</p></div>
+                    </div>
+                    <div class="tool-panel planning-panel">
+                        <div class="tool-panel-heading"><div><span class="tool-kicker">GOALS</span><h3>Savings goals</h3></div></div>
+                        <form id="goalForm" class="inline-tool-form"><input id="goalName" type="text" placeholder="Goal name" aria-label="Savings goal name" maxlength="40" required><input id="goalTarget" type="number" min="1" step="0.01" placeholder="Target R" aria-label="Savings goal target" required><button type="submit" aria-label="Add savings goal" title="Add savings goal"><i class="fas fa-plus"></i></button></form>
+                        <div id="goalList" class="planning-list"><p class="tool-empty">Add a goal to give your money a direction.</p></div>
+                    </div>
+                    <div class="tool-panel planning-panel">
+                        <div class="tool-panel-heading"><div><span class="tool-kicker">COMMITMENTS</span><h3>Bill reminders</h3></div></div>
+                        <form id="reminderForm" class="inline-tool-form"><input id="reminderName" type="text" placeholder="Bill or commitment" aria-label="Bill reminder name" maxlength="40" required><input id="reminderAmount" type="number" min="0.01" step="0.01" placeholder="Amount R" aria-label="Bill reminder amount" required><input id="reminderDate" type="date" aria-label="Bill reminder date" required><button type="submit" aria-label="Add bill reminder" title="Add bill reminder"><i class="fas fa-plus"></i></button></form>
+                        <div id="reminderList" class="planning-list"><p class="tool-empty">Add bills to make safe-to-spend more accurate.</p></div>
+                    </div>
+                </section>
+
                 <!-- Select Bank -->
                 <div class="section-title">
                     <h3>Select Bank to Use</h3>
                     <p>Choose the bank you want to use with your Bankease SmartCard.</p>
+                </div>
+                <div class="drop-transfer-prompt" id="dropTransferPrompt" hidden>
+                    <div><i class="fas fa-arrows-up-down-left-right"></i><span id="dropTransferText">Transfer between accounts</span></div>
+                    <button type="button" id="dropTransferButton">Transfer</button>
+                    <button type="button" class="drop-transfer-cancel" id="dropTransferCancel" aria-label="Cancel transfer selection" title="Cancel"><i class="fas fa-xmark"></i></button>
                 </div>
                 <div class="bank-list" id="bankList"></div>
                 <!-- Add bank button -->
@@ -84,7 +128,8 @@
                 <div id="transferPage" class="page-wrapper"><button class="page-back" data-page="back"><i
                             class="fas fa-arrow-left"></i> Back</button>
                     <h3>Transfer</h3>
-                    <p class="page-intro">Move money between your banks.</p>
+                    <p class="page-intro">Move money between your banks. Drag one account onto another to prefill this form.</p>
+                    <label for="transferRail">Transfer rail</label><select id="transferRail" class="form-control" title="Transfer rail" aria-label="Transfer rail"><option value="internal">Bankease internal transfer</option><option value="payshap">PayShap - connect provider</option></select>
                     <label for="transferFrom">From</label><select id="transferFrom" class="form-control" title="Transfer from bank" aria-label="Transfer from bank"></select>
                     <label for="transferTo">To</label><select id="transferTo" class="form-control" title="Transfer to bank" aria-label="Transfer to bank"></select>
                     <label for="transferAmount">Amount (R)</label><input type="number" id="transferAmount" class="form-control" placeholder="0.00" aria-label="Transfer amount in rand">
@@ -93,19 +138,26 @@
                 </div>
                 <div id="airtimePage" class="page-wrapper"><button class="page-back" data-page="back"><i
                             class="fas fa-arrow-left"></i> Back</button>
-                    <h3>Airtime</h3>
-                    <p class="page-intro">Buy airtime for any network.</p>
-                    <label for="airtimeNetwork">Network</label><select id="airtimeNetwork" class="form-control" title="Network provider" aria-label="Network provider">
+                    <h3>Buy services</h3>
+                    <p class="page-intro">Airtime, data, electricity and vouchers in one place.</p>
+                    <label for="serviceType">What do you need?</label><select id="serviceType" class="form-control" title="Service type" aria-label="Service type">
+                        <option value="airtime">Airtime</option>
+                        <option value="data">Mobile data</option>
+                        <option value="electricity">Electricity</option>
+                        <option value="gaming">Gaming voucher</option>
+                        <option value="voucher">Gift voucher</option>
+                    </select>
+                    <label for="airtimeNetwork" id="serviceProviderLabel">Network</label><select id="airtimeNetwork" class="form-control" title="Service provider" aria-label="Service provider">
                         <option>Vodacom</option>
                         <option>MTN</option>
                         <option>Cell C</option>
                         <option>Telkom</option>
                     </select>
-                    <label for="airtimePhone">Cellphone Number</label><input type="text" id="airtimePhone" class="form-control" placeholder="082 123 4567" aria-label="Cellphone number">
+                    <label for="airtimePhone" id="serviceRecipientLabel">Cellphone Number</label><input type="text" id="airtimePhone" class="form-control" placeholder="082 123 4567" aria-label="Cellphone number">
                     <label for="airtimeAmount">Amount (R)</label><input type="number" id="airtimeAmount" class="form-control" placeholder="0.00" aria-label="Airtime amount in rand">
                     <label for="airtimeBank">Pay with Bank</label><select id="airtimeBank" class="form-control" title="Bank for airtime purchase" aria-label="Bank for airtime purchase"></select>
-                    <button class="btn-primary full-width-btn" id="buyAirtimeBtn">Buy
-                        Airtime</button>
+                    <p class="service-availability" id="serviceAvailability"><i class="fas fa-circle-check"></i> Airtime is available now</p>
+                    <button class="btn-primary full-width-btn" id="buyAirtimeBtn">Buy service</button>
                     <div id="airtimeMsg" class="form-message"></div>
                 </div>
                 <div id="cardPage" class="page-wrapper"><button class="page-back" data-page="back"><i

@@ -414,6 +414,19 @@ app.get('/api/admin/sessions', async (request, response, next) => {
     } catch (error) { return next(error); }
 });
 
+app.patch('/api/admin/sessions/:id', async (request, response, next) => {
+    try {
+        const admin = await requireAdmin(request, response);
+        if (!admin) return;
+        if (request.params.id === request.session.sessionId) return response.status(400).json({ error: 'You cannot revoke your current session.' });
+        const { data: session, error } = await supabase.from('user_sessions').update({ is_active: false }).eq('id', request.params.id).eq('is_active', true).select('id,user_id').maybeSingle();
+        if (error) throw error;
+        if (!session) return response.status(404).json({ error: 'Active session was not found.' });
+        await recordAudit(admin.id, 'session_revoked', session.user_id, { sessionId: session.id });
+        return response.json({ message: 'Session revoked.' });
+    } catch (error) { return next(error); }
+});
+
 app.get('/api/admin/audit', async (request, response, next) => {
     try {
         if (!await requireAdmin(request, response)) return;

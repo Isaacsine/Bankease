@@ -35,8 +35,26 @@ function renderUsers() {
     $('#usersTable').innerHTML = state.users.filter(user => `${user.full_name} ${user.email}`.toLowerCase().includes(query)).map(user => `<tr><td><strong>${escapeHtml(user.full_name)}</strong><small>${escapeHtml(user.email)}</small></td><td><span class="role-badge ${escapeHtml(user.role)}">${escapeHtml(user.role)}</span></td><td><span class="status-pill ${user.status === 'active' ? 'healthy' : 'amber'}">${escapeHtml(user.status)}</span></td><td>${date(user.last_login_at)}</td><td>${date(user.created_at)}</td><td>${user.role === 'admin' ? '<span class="muted">Protected</span>' : `<button class="table-action" data-user-id="${escapeHtml(user.id)}" data-status="${user.status === 'active' ? 'suspended' : 'active'}">${user.status === 'active' ? 'Suspend' : 'Restore'}</button>`}</td></tr>`).join('') || '<tr><td colspan="6" class="empty">No users found.</td></tr>';
 }
 
-function renderSessions() { $('#sessionsTable').innerHTML = state.sessions.map(session => `<tr><td><strong>${escapeHtml(session.user?.full_name || 'Unknown user')}</strong><small>${escapeHtml(session.user?.email || '')}</small></td><td>${date(session.login_at)}</td><td>${date(session.last_seen_at)}</td><td>${escapeHtml(session.ip_address || 'Unavailable')}</td><td><span class="status-pill ${session.is_active ? 'healthy' : ''}">${session.is_active ? 'Active' : 'Ended'}</span></td></tr>`).join('') || '<tr><td colspan="5" class="empty">No sessions recorded.</td></tr>'; }
-function renderAudit() { $('#auditTable').innerHTML = state.audit.map(log => `<tr><td><strong>${escapeHtml(log.action)}</strong></td><td>${escapeHtml(log.actor?.full_name || 'System')}</td><td>${escapeHtml(log.target?.full_name || 'System')}</td><td>${escapeHtml(JSON.stringify(log.metadata || {}))}</td><td>${date(log.created_at)}</td></tr>`).join('') || '<tr><td colspan="5" class="empty">No audit events recorded.</td></tr>'; }
+function renderSessions() { $('#sessionsTable').innerHTML = state.sessions.map(session => `<tr><td><strong>${escapeHtml(session.user?.full_name || 'Unknown user')}</strong><small>${escapeHtml(session.user?.email || '')}</small></td><td>${date(session.login_at)}</td><td>${date(session.last_seen_at)}</td><td>${escapeHtml(session.ip_address || 'Unavailable')}</td><td><span class="status-pill ${session.is_active ? 'healthy' : ''}">${session.is_active ? 'Active' : 'Ended'}</span></td><td>${session.is_active ? `<button class="table-action session-action" data-session-id="${escapeHtml(session.id)}">Revoke</button>` : '<span class="muted">Closed</span>'}</td></tr>`).join('') || '<tr><td colspan="6" class="empty">No sessions recorded.</td></tr>'; }
+function renderAuditFilters() {
+    const filter = $('#auditActionFilter');
+    if (!filter) return;
+    const selected = filter.value;
+    const actions = [...new Set(state.audit.map(log => log.action).filter(Boolean))].sort();
+    filter.innerHTML = '<option value="">All actions</option>' + actions.map(action => `<option value="${escapeHtml(action)}">${escapeHtml(action)}</option>`).join('');
+    filter.value = actions.includes(selected) ? selected : '';
+}
+
+function filteredAudit() {
+    const query = ($('#auditSearch')?.value || '').toLowerCase();
+    const action = $('#auditActionFilter')?.value || '';
+    return state.audit.filter(log => {
+        const searchable = `${log.action} ${log.actor?.full_name || ''} ${log.target?.full_name || ''} ${JSON.stringify(log.metadata || {})}`.toLowerCase();
+        return (!query || searchable.includes(query)) && (!action || log.action === action);
+    });
+}
+
+function renderAudit() { $('#auditTable').innerHTML = filteredAudit().map(log => `<tr><td><strong>${escapeHtml(log.action)}</strong></td><td>${escapeHtml(log.actor?.full_name || 'System')}</td><td>${escapeHtml(log.target?.full_name || 'System')}</td><td>${escapeHtml(JSON.stringify(log.metadata || {}))}</td><td>${date(log.created_at)}</td></tr>`).join('') || '<tr><td colspan="5" class="empty">No audit events match your filters.</td></tr>'; }
 
 async function load() {
     try {
@@ -45,7 +63,7 @@ async function load() {
         $('#adminName').textContent = me.user.fullName || me.user.email;
         const [overview, users, sessions, audit] = await Promise.all([request('/api/admin/overview'), request('/api/admin/users'), request('/api/admin/sessions'), request('/api/admin/audit')]);
         state.overview = overview; state.users = users.users; state.sessions = sessions.sessions; state.audit = audit.audit;
-        renderOverview(); renderUsers(); renderSessions(); renderAudit();
+        renderOverview(); renderUsers(); renderSessions(); renderAuditFilters(); renderAudit();
         $('#lastUpdated').textContent = `Updated ${new Date().toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit' })}`;
     } catch (error) {
         showMessage(error.message);
@@ -60,8 +78,10 @@ async function load() {
 document.addEventListener('click', async (event) => {
     const nav = event.target.closest('[data-view]');
     if (nav) { document.querySelectorAll('.view').forEach(view => view.classList.remove('active-view')); $(`#view-${nav.dataset.view}`).classList.add('active-view'); document.querySelectorAll('.nav-link').forEach(link => link.classList.toggle('active', link.dataset.view === nav.dataset.view)); $('#pageTitle').textContent = nav.dataset.view[0].toUpperCase() + nav.dataset.view.slice(1); return; }
-    const action = event.target.closest('.table-action');
+    const action = event.target.closest('.table-action:not(.session-action)');
     if (action) { try { await request(`/api/admin/users/${action.dataset.userId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: action.dataset.status }) }); await load(); showMessage('User status updated.', 'success'); } catch (error) { showMessage(error.message); } }
+    const sessionAction = event.target.closest('.session-action');
+    if (sessionAction) { try { await request(`/api/admin/sessions/${sessionAction.dataset.sessionId}`, { method: 'PATCH' }); await load(); showMessage('Session revoked.', 'success'); } catch (error) { showMessage(error.message); } }
     if (event.target.closest('#logoutButton')) { await request('/api/logout', { method: 'POST' }); window.location.href = '../login.html'; }
 });
 $('#createAdminForm').addEventListener('submit', async (event) => {
@@ -77,4 +97,21 @@ $('#createAdminForm').addEventListener('submit', async (event) => {
     } catch (error) { showMessage(error.message); } finally { button.disabled = false; }
 });
 $('#userSearch').addEventListener('input', renderUsers);
+$('#auditSearch')?.addEventListener('input', renderAudit);
+$('#auditActionFilter')?.addEventListener('change', renderAudit);
+$('#exportAudit')?.addEventListener('click', () => {
+    const rows = filteredAudit();
+    const csvValue = value => `"${String(value ?? '').replace(/"/g, '""')}"`;
+    const csv = [['Action', 'Actor', 'Target', 'Details', 'Time'], ...rows.map(log => [log.action, log.actor?.full_name || 'System', log.target?.full_name || 'System', JSON.stringify(log.metadata || {}), date(log.created_at)])].map(row => row.map(csvValue).join(',')).join('\n');
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+    link.download = `bankease-audit-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+});
+$('#refreshButton')?.addEventListener('click', async (event) => {
+    const button = event.currentTarget;
+    button.disabled = true;
+    try { await load(); showMessage('Admin data refreshed.', 'success'); } catch (error) { showMessage(error.message); } finally { button.disabled = false; }
+});
 load();
