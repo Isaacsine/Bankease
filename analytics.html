@@ -129,8 +129,8 @@
         .insight-item {
             display: flex;
             gap: 12px;
-            padding: 12px 0;
-            border-bottom: 1px solid #f5f5f5;
+            padding: 14px 0;
+            border-bottom: 1px solid #e8ecef;
         }
 
         .insight-item:last-child {
@@ -138,13 +138,15 @@
         }
 
         .insight-icon {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            border-radius: 0;
+            background: transparent !important;
+            color: #718087 !important;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 16px;
+            font-size: 13px;
             flex-shrink: 0;
         }
 
@@ -349,13 +351,16 @@
 
         .recommendation-card {
             margin-top: 12px;
-            background: linear-gradient(135deg, #1a1a2e, #2d2d44);
-            color: #fff;
+            background: #fff;
+            color: #1a1a2e;
+            border: 1px solid #e1e7ea;
+            border-left: 3px solid #0d8b83;
+            box-shadow: none;
         }
 
         .recommendation-card h4 {
             font-size: 14px;
-            color: #fff;
+            color: #1a1a2e;
             margin-bottom: 8px;
         }
 
@@ -363,7 +368,7 @@
             display: flex;
             gap: 12px;
             padding: 8px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid #e8ecef;
         }
 
         .recommendation-row:last-child {
@@ -371,7 +376,9 @@
         }
 
         .recommendation-row i {
-            font-size: 20px;
+            width: 20px;
+            padding-top: 2px;
+            font-size: 15px;
         }
 
         .recommendation-row .recommendation-title {
@@ -381,7 +388,7 @@
 
         .recommendation-row .recommendation-text {
             font-size: 12px;
-            opacity: 0.7;
+            color: #718087;
         }
 
         .recommendation-row .recommendation-subtitle {
@@ -391,12 +398,12 @@
 
         .recommendation-row .recommendation-subtext {
             font-size: 12px;
-            opacity: 0.7;
+            color: #718087;
         }
 
-        .recommendation-row .icon-card { color: #e67e22; }
-        .recommendation-row .icon-trend { color: #2ecc71; }
-        .recommendation-row .icon-bank { color: #4a6cf7; }
+        .recommendation-row .icon-card,
+        .recommendation-row .icon-trend,
+        .recommendation-row .icon-bank { color: #0d8b83; }
 
         @media (max-width: 480px) {
             .period-selector {
@@ -513,13 +520,13 @@
 
             <!-- Insights -->
             <div class="analytics-card analytics-card-spaced">
-                <h4>💡 Insights</h4>
+                <h4>Insights</h4>
                 <div id="insightList"></div>
             </div>
 
             <!-- Recommendations -->
             <div class="analytics-card recommendation-card">
-                <h4>🎯 Recommendations</h4>
+                <h4>Recommendations</h4>
 
                 <div class="recommendation-row">
                     <i class="fas fa-credit-card icon-card"></i>
