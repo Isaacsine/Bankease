@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bankease - Account details</title>
+    <link rel="icon" type="image/png" href="assets/iconLogo.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <style>
+        .app { max-width: 100%; }
+        .account-detail-page { max-width: 920px; margin: 0 auto; padding: 20px 16px 104px; }
+        .account-detail-hero { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px; align-items: center; padding: 22px 0; border-bottom: 1px solid #dfe4e8; }
+        .account-detail-identity { display: flex; align-items: center; gap: 16px; min-width: 0; }
+        .account-detail-mark { width: 54px; height: 54px; display: grid; place-items: center; flex: 0 0 54px; border-radius: 12px; background: #e8f4f1; color: #147d5a; font-size: 22px; }
+        .account-detail-identity h2 { font-size: 20px; overflow-wrap: anywhere; }
+        .account-detail-identity p { color: #737d86; font-size: 13px; margin-top: 4px; }
+        .account-detail-balance { text-align: right; }
+        .account-detail-balance span { display: block; color: #737d86; font-size: 12px; }
+        .account-detail-balance strong { display: block; margin-top: 4px; font-size: 24px; }
+        .account-state { display: inline-block; margin-top: 8px; padding: 4px 8px; border-radius: 4px; background: #e8f4f1; color: #147d5a; font-size: 12px; font-weight: 700; }
+        .account-state.paused { background: #f0f1f2; color: #5f6870; }
+        .low-balance-warning { margin-top: 8px; color: #925b0b; font-size: 12px; font-weight: 600; }
+        .account-detail-actions { display: flex; gap: 10px; margin: 16px 0 24px; }
+        .account-detail-actions a, .account-detail-actions button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; padding: 0 14px; border: 1px solid #cbd2d8; border-radius: 5px; background: #fff; color: #26333d; font: inherit; text-decoration: none; cursor: pointer; }
+        .account-detail-actions [hidden] { display: none; }
+        .account-detail-actions .unlink-account { color: #9a4d45; }
+        .account-detail-actions button:disabled { cursor: default; opacity: .6; }
+        .account-detail-grid { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 24px; }
+        .account-detail-panel { min-width: 0; padding: 18px 0; border-top: 2px solid #26333d; }
+        .account-detail-panel h3 { margin-bottom: 14px; font-size: 16px; }
+        .account-edit-form label { display: block; margin: 12px 0 6px; font-size: 13px; font-weight: 600; }
+        .account-edit-form input, .account-edit-form select { width: 100%; min-height: 42px; padding: 9px 11px; border: 1px solid #cbd2d8; border-radius: 5px; background: #fff; font: inherit; }
+        .account-edit-form button { margin-top: 16px; }
+        .activity-controls { display: grid; grid-template-columns: minmax(0, 1fr) 130px auto; gap: 8px; margin-bottom: 8px; }
+        .activity-controls input, .activity-controls select, .activity-controls button { min-width: 0; min-height: 38px; padding: 7px 9px; border: 1px solid #cbd2d8; border-radius: 5px; background: #fff; color: #26333d; font: inherit; }
+        .activity-controls button { cursor: pointer; white-space: nowrap; }
+        .activity-message { min-height: 18px; color: #737d86; font-size: 12px; }
+        .account-activity { display: grid; }
+        .account-transaction { display: flex; justify-content: space-between; gap: 14px; padding: 13px 0; border-bottom: 1px solid #edf0f2; }
+        .account-transaction:last-child { border-bottom: 0; }
+        .account-transaction strong { display: block; font-size: 14px; overflow-wrap: anywhere; }
+        .account-transaction time, .account-transaction small { display: block; margin-top: 4px; color: #737d86; font-size: 12px; }
+        .account-transaction .amount { flex-shrink: 0; font-weight: 700; }
+        .account-transaction .debit { color: #9a4d45; }
+        .account-transaction .credit { color: #147d5a; }
+        .account-empty { color: #737d86; padding: 12px 0; font-size: 14px; }
+        @media (max-width: 680px) {
+            .account-detail-hero { grid-template-columns: 1fr; gap: 14px; }
+            .account-detail-balance { text-align: left; }
+            .account-detail-grid { grid-template-columns: 1fr; gap: 8px; }
+            .account-detail-actions { flex-wrap: wrap; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <div class="header">
+            <a class="logo-wrapper" href="dashboard.html" aria-label="Go to dashboard"><img class="logo-icon" src="assets/bankeaseLogo.png" alt="Bankease icon"><div><div class="logo-text">BANKE<span class="highlight">ASE</span></div><div class="logo-tagline">ONE CARD. ALL BANKS.</div></div></a>
+            <div class="header-actions"><a href="accounts.html" aria-label="Back to accounts"><i class="fas fa-arrow-left"></i></a></div>
+        </div>
+        <div class="page-title-block"><h2>Account details</h2><p id="accountSubtitle">Loading linked account...</p></div>
+        <main class="account-detail-page">
+            <section class="account-detail-hero">
+                <div class="account-detail-identity"><span class="account-detail-mark"><i class="fas fa-building-columns"></i></span><div><h2 id="accountTitle">Loading...</h2><p id="accountMeta"></p></div></div>
+                <div class="account-detail-balance"><span>Available balance</span><strong id="accountBalance">R0.00</strong><span class="account-state" id="accountState">Active</span><p class="low-balance-warning" id="lowBalanceWarning" hidden></p></div>
+            </section>
+            <div class="account-detail-actions">
+                <a id="transferLink" href="transfer.html"><i class="fas fa-arrow-up-right-from-square"></i> Transfer</a>
+                <button id="toggleAccountStatus" type="button"><i class="fas fa-pause"></i> Pause account</button>
+                <button id="setDefaultAccount" type="button"><i class="fas fa-star"></i> Set as default</button>
+                <button class="unlink-account" id="unlinkAccount" type="button"><i class="fas fa-link-slash"></i> Unlink account</button>
+            </div>
+            <div class="account-detail-grid">
+                <section class="account-detail-panel">
+                    <h3>Account settings</h3>
+                    <form id="accountEditForm" class="account-edit-form">
+                        <label for="customName">Account nickname</label>
+                        <input id="customName" name="customName" maxlength="60" placeholder="Optional nickname">
+                        <label for="accountNumber">Last four digits</label>
+                        <input id="accountNumber" name="accountNumber" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required>
+                        <label for="accountType">Account type</label>
+                        <select id="accountType" name="accountType" required>
+                            <option value="cheque">Cheque account</option>
+                            <option value="savings">Savings</option>
+                            <option value="credit">Credit card</option>
+                            <option value="investment">Investment</option>
+                        </select>
+                        <label for="lowBalanceThreshold">Low-balance alert (R)</label>
+                        <input id="lowBalanceThreshold" name="lowBalanceThreshold" type="number" min="0" step="0.01" placeholder="Off">
+                        <button class="btn-primary full-width-btn" type="submit">Save account details</button>
+                        <p class="form-message" id="accountMessage" role="status"></p>
+                    </form>
+                </section>
+                <section class="account-detail-panel">
+                    <h3>Account activity</h3>
+                    <div class="activity-controls">
+                        <input id="activitySearch" type="search" placeholder="Search activity" aria-label="Search account activity">
+                        <select id="activityFilter" aria-label="Filter account activity"><option value="all">All activity</option><option value="debit">Money out</option><option value="credit">Money in</option><option value="transfer">Transfers</option></select>
+                        <button id="exportActivity" type="button" aria-label="Export account activity" title="Export CSV"><i class="fas fa-download"></i></button>
+                    </div>
+                    <p id="activityMessage" class="activity-message" aria-live="polite"></p>
+                    <div class="account-activity" id="accountActivity" aria-live="polite"><p class="account-empty">Loading activity...</p></div>
+                </section>
+            </div>
+        </main>
+        <div class="bottom-nav">
+            <button class="nav-item" onclick="location.href='dashboard.html'"><i class="fas fa-th"></i> Dashboard</button>
+            <button class="nav-item active"><i class="fas fa-wallet"></i> Accounts</button>
+            <button class="nav-item" onclick="location.href='transfer.html'"><i class="fas fa-exchange-alt"></i> Transfer</button>
+            <button class="nav-item" onclick="location.href='settings.html'"><i class="fas fa-user-cog"></i> Settings</button>
+        </div>
+    </div>
+    <script src="i18n.js"></script>
+    <script src="theme.js"></script>
+    <script>
+        const bankId = new URLSearchParams(window.location.search).get('id');
+        const activityList = document.getElementById('accountActivity');
+        const accountForm = document.getElementById('accountEditForm');
+        const accountMessage = document.getElementById('accountMessage');
+        const activityMessage = document.getElementById('activityMessage');
+        const money = value => 'R' + Number(value || 0).toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
+        let activeBank;
+        let defaultBankId = null;
+        let accountTransactions = [];
+
+        function showMessage(text, type) {
+            accountMessage.textContent = text;
+            accountMessage.className = 'form-message ' + (type || '');
+        }
+
+        function renderActivity(transactions) {
+            accountTransactions = transactions.filter(transaction => transaction.from_bank_id === activeBank.id || transaction.to_bank_id === activeBank.id);
+            const query = document.getElementById('activitySearch').value.trim().toLowerCase();
+            const filter = document.getElementById('activityFilter').value;
+            const matching = accountTransactions.filter(transaction => {
+                const amount = Number(transaction.amount);
+                const isTransfer = /transfer/i.test(transaction.title) || Boolean(transaction.beneficiary_id);
+                const searchable = `${transaction.title} ${transaction.memo || ''} ${transaction.status || ''}`.toLowerCase();
+                return (!query || searchable.includes(query))
+                    && (filter === 'all' || (filter === 'debit' && amount < 0) || (filter === 'credit' && amount > 0) || (filter === 'transfer' && isTransfer));
+            });
+            activityMessage.textContent = matching.length + ' of ' + accountTransactions.length + ' transactions';
+            activityList.innerHTML = matching.length ? matching.map(transaction => {
+                const amount = Number(transaction.amount);
+                return `<article class="account-transaction"><div><strong>${escapeHtml(transaction.title)}</strong><time>${new Date(transaction.created_at).toLocaleString()}</time>${transaction.memo ? `<small>${escapeHtml(transaction.memo)}</small>` : ''}</div><span class="amount ${amount < 0 ? 'debit' : 'credit'}">${amount < 0 ? '-' : '+'}${money(Math.abs(amount))}</span></article>`;
+            }).join('') : '<p class="account-empty">No activity recorded for this account.</p>';
+        }
+
+        function exportActivity() {
+            const rows = accountTransactions.filter(transaction => {
+                const query = document.getElementById('activitySearch').value.trim().toLowerCase();
+                const filter = document.getElementById('activityFilter').value;
+                const amount = Number(transaction.amount);
+                const isTransfer = /transfer/i.test(transaction.title) || Boolean(transaction.beneficiary_id);
+                const searchable = `${transaction.title} ${transaction.memo || ''} ${transaction.status || ''}`.toLowerCase();
+                return (!query || searchable.includes(query))
+                    && (filter === 'all' || (filter === 'debit' && amount < 0) || (filter === 'credit' && amount > 0) || (filter === 'transfer' && isTransfer));
+            });
+            const csvField = value => `"${String(value ?? '').replace(/"/g, '""')}"`;
+            const csv = [['Date', 'Description', 'Amount', 'Status', 'Note'], ...rows.map(transaction => [transaction.created_at, transaction.title, transaction.amount, transaction.status, transaction.memo])].map(row => row.map(csvField).join(',')).join('\n');
+            const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `account-activity-${activeBank.id}-${new Date().toISOString().slice(0, 10)}.csv`;
+            link.click();
+            window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }
+
+        async function loadAccount() {
+            if (!bankId) { window.location.href = 'accounts.html'; return; }
+            const [banksResponse, transactionsResponse, userResponse] = await Promise.all([fetch('/api/banks', { credentials: 'same-origin' }), fetch('/api/transactions', { credentials: 'same-origin' }), fetch('/api/me', { credentials: 'same-origin' })]);
+            if (banksResponse.status === 401 || transactionsResponse.status === 401 || userResponse.status === 401) { window.location.href = 'login.html'; return; }
+            if (!banksResponse.ok || !transactionsResponse.ok || !userResponse.ok) throw new Error('Could not load account details.');
+            const banks = (await banksResponse.json()).banks;
+            const transactions = (await transactionsResponse.json()).transactions;
+            defaultBankId = (await userResponse.json()).user.defaultBankId || null;
+            activeBank = banks.find(bank => bank.id === bankId);
+            if (!activeBank) { window.location.href = 'accounts.html'; return; }
+            const displayName = activeBank.custom_name || activeBank.name;
+            document.title = 'Bankease - ' + displayName;
+            document.getElementById('accountSubtitle').textContent = activeBank.name + ' account';
+            document.getElementById('accountTitle').textContent = displayName;
+            document.getElementById('accountMeta').textContent = `${activeBank.account_type} | **** ${activeBank.last_digits}`;
+            document.getElementById('accountBalance').textContent = money(activeBank.balance);
+            const accountState = document.getElementById('accountState');
+            accountState.textContent = activeBank.is_active ? 'Active' : 'Paused';
+            accountState.classList.toggle('paused', !activeBank.is_active);
+            const warning = document.getElementById('lowBalanceWarning');
+            const threshold = activeBank.low_balance_threshold === null ? null : Number(activeBank.low_balance_threshold);
+            warning.hidden = threshold === null || Number(activeBank.balance) > threshold;
+            warning.textContent = warning.hidden ? '' : `Below your ${money(threshold)} alert threshold`;
+            document.getElementById('customName').value = activeBank.custom_name || '';
+            document.getElementById('accountNumber').value = activeBank.last_digits;
+            document.getElementById('accountType').value = activeBank.account_type;
+            document.getElementById('lowBalanceThreshold').value = threshold === null ? '' : threshold;
+            const transferLink = document.getElementById('transferLink');
+            transferLink.href = 'transfer.html?bank=' + encodeURIComponent(activeBank.id);
+            transferLink.hidden = !activeBank.is_active;
+            const pauseButton = document.getElementById('toggleAccountStatus');
+            pauseButton.innerHTML = activeBank.is_active ? '<i class="fas fa-pause"></i> Pause account' : '<i class="fas fa-play"></i> Reactivate account';
+            const defaultButton = document.getElementById('setDefaultAccount');
+            defaultButton.hidden = !activeBank.is_active;
+            defaultButton.disabled = defaultBankId === activeBank.id;
+            defaultButton.innerHTML = defaultBankId === activeBank.id ? '<i class="fas fa-star"></i> Default account' : '<i class="far fa-star"></i> Set as default';
+            renderActivity(transactions);
+        }
+
+        accountForm.addEventListener('submit', async event => {
+            event.preventDefault();
+            const button = accountForm.querySelector('button[type="submit"]');
+            button.disabled = true;
+            showMessage('Saving account details...', '');
+            try {
+                const payload = Object.fromEntries(new FormData(accountForm));
+                payload.lowBalanceThreshold = payload.lowBalanceThreshold === '' ? null : Number(payload.lowBalanceThreshold);
+                const response = await fetch('/api/banks/' + encodeURIComponent(bankId), { method: 'PATCH', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.error || 'Could not update account details.');
+                showMessage('Account details saved.', 'success');
+                await loadAccount();
+            } catch (error) { showMessage(error.message, 'error'); }
+            finally { button.disabled = false; }
+        });
+
+        document.getElementById('toggleAccountStatus').addEventListener('click', async event => {
+            if (!activeBank) return;
+            const isActive = !activeBank.is_active;
+            const action = isActive ? 'reactivate' : 'pause';
+            if (!window.confirm(`${isActive ? 'Reactivate' : 'Pause'} this account? ${isActive ? '' : 'It will no longer be available for transfers or purchases.'}`)) return;
+            const button = event.currentTarget;
+            button.disabled = true;
+            try {
+                const response = await fetch('/api/banks/' + encodeURIComponent(bankId) + '/status', { method: 'PATCH', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ isActive }) });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.error || `Could not ${action} account.`);
+                showMessage(isActive ? 'Account reactivated.' : 'Account paused.', 'success');
+                await loadAccount();
+            } catch (error) { showMessage(error.message, 'error'); }
+            finally { button.disabled = false; }
+        });
+
+        document.getElementById('setDefaultAccount').addEventListener('click', async event => {
+            const button = event.currentTarget;
+            button.disabled = true;
+            try {
+                const response = await fetch('/api/me/default-bank', { method: 'PATCH', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ bankId }) });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.error || 'Could not set the default account.');
+                defaultBankId = result.defaultBankId;
+                showMessage('Default account updated.', 'success');
+                await loadAccount();
+            } catch (error) { showMessage(error.message, 'error'); button.disabled = false; }
+        });
+
+        document.getElementById('activitySearch').addEventListener('input', () => renderActivity(accountTransactions));
+        document.getElementById('activityFilter').addEventListener('change', () => renderActivity(accountTransactions));
+        document.getElementById('exportActivity').addEventListener('click', exportActivity);
+
+        document.getElementById('unlinkAccount').addEventListener('click', async event => {
+            if (!activeBank || !window.confirm(`Unlink ${activeBank.custom_name || activeBank.name}? Its transaction history will remain in your activity.`)) return;
+            const button = event.currentTarget;
+            button.disabled = true;
+            try {
+                const response = await fetch('/api/banks/' + encodeURIComponent(activeBank.id), { method: 'DELETE', credentials: 'same-origin' });
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(result.error || 'Could not unlink account.');
+                window.location.href = 'accounts.html';
+            } catch (error) { showMessage(error.message, 'error'); button.disabled = false; }
+        });
+
+        loadAccount().catch(error => showMessage(error.message, 'error'));
+    </script>
+</body>
+</html>

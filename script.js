@@ -6,6 +6,7 @@
     // ---------- DATA ----------
     let banks = [];
     let selectedId = null;
+    let defaultBankId = null;
     let transactions = [
         { title: 'ATM Withdrawal', bank: 'FNB *****', amount: -1000, time: 'Today, 10:45 AM', icon: 'fa-money-bill-wave' },
         { title: 'POS Purchase', bank: 'Capitec *****', amount: -250, time: 'Yesterday, 4:30 PM', icon: 'fa-shopping-cart' },
@@ -29,7 +30,7 @@
     }
 
     function normalizeBank(bank) {
-        return { ...bank, lastDigits: bank.last_digits, fullName: bank.full_name, type: bank.account_type };
+        return { ...bank, lastDigits: bank.last_digits, fullName: bank.full_name, customName: bank.custom_name, type: bank.account_type };
     }
 
     async function loadUserData() {
@@ -44,6 +45,7 @@
         const greeting = document.querySelector('.greeting h2');
         if (greeting) greeting.textContent = 'Hello, ' + userResult.user.fullName;
         banks = banksResult.banks.map(normalizeBank);
+        defaultBankId = userResult.user.defaultBankId || banksResult.defaultBankId || null;
         transactions = transactionsResult.transactions.map(transaction => ({
             title: transaction.title,
             bank: '',
@@ -51,8 +53,9 @@
             time: new Date(transaction.created_at).toLocaleString(),
             icon: transaction.title.toLowerCase().includes('transfer') ? 'fa-exchange-alt' : 'fa-receipt'
         }));
-        selectedId = banks[0]?.id || null;
+        selectedId = banks.some(bank => bank.id === defaultBankId && bank.is_active) ? defaultBankId : banks.find(bank => bank.is_active)?.id || banks[0]?.id || null;
         renderAll();
+        populateDefaultBankSelect();
     }
 
     function renderBankIcon(bank, style, size) {
@@ -325,7 +328,7 @@
                 <div style="display:flex;align-items:center;gap:12px;flex:1;">
                     ${renderBankIcon(bank, style, 36)}
                     <div>
-                        <div class="bank-name">${bank.name}</div>
+                        <div class="bank-name">${escapeHtml(bank.customName || bank.name)}</div>
                         <div class="bank-detail">${bank.fullName}</div>
                     </div>
                 </div>
@@ -409,12 +412,12 @@
                         <div style="display:flex;align-items:center;gap:12px;">
                             ${renderBankIcon(bank, style, 44)}
                             <div>
-                                <div class="bank-detail-name">${bank.name}</div>
+                                <div class="bank-detail-name">${escapeHtml(bank.customName || bank.name)}</div>
                                 <div class="bank-detail-sub">${bank.fullName}</div>
                             </div>
                         </div>
                     </div>
-                    <div class="bank-detail-status">Active</div>
+                    <div class="bank-detail-status">${bank.is_active ? 'Active' : 'Paused'}</div>
                 </div>
                 
                 <div class="bank-detail-balance">
@@ -428,9 +431,8 @@
                 </div>
                 
                 <div class="bank-detail-actions">
-                    <button class="btn-use" data-page="transfer"><i class="fas fa-exchange-alt"></i> Transfer</button>
-                    <button class="btn-secondary" data-page="airtime"><i class="fas fa-phone-alt"></i> Airtime</button>
-                    <button class="btn-secondary" data-page="settings"><i class="fas fa-cog"></i> Manage</button>
+                    ${bank.is_active ? '<button class="btn-use" data-page="transfer"><i class="fas fa-exchange-alt"></i> Transfer</button><button class="btn-secondary" data-page="airtime"><i class="fas fa-phone-alt"></i> Airtime</button>' : '<span class="bank-detail-sub">Paused accounts cannot be used for transfers or purchases.</span>'}
+                    <button class="btn-secondary" data-bank-details="${encodeURIComponent(bank.id)}"><i class="fas fa-cog"></i> Manage</button>
                 </div>
                 
                 <div style="margin-top:16px;">
@@ -464,8 +466,15 @@
         bankDetailContainer.querySelectorAll('[data-page]').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const page = e.currentTarget.dataset.page;
-                openPage(page);
+                if (page === 'transfer') {
+                    window.location.href = 'transfer.html?bank=' + encodeURIComponent(bank.id);
+                } else {
+                    openPage(page);
+                }
             });
+        });
+        bankDetailContainer.querySelector('[data-bank-details]')?.addEventListener('click', () => {
+            window.location.href = 'bank-details.html?id=' + encodeURIComponent(bank.id);
         });
 
         updateTotalBalance();
@@ -525,11 +534,13 @@
     function populateTransferSelects() {
         const from = document.getElementById('transferFrom');
         const to = document.getElementById('transferTo');
+        const activeBanks = banks.filter(bank => bank.is_active);
         if (from && to) {
-            from.innerHTML = banks.map(b => `<option value="${b.id}">${b.name} (${formatCurrency(b.balance)})</option>`).join('');
-            to.innerHTML = banks.map(b => `<option value="${b.id}">${b.name} (${formatCurrency(b.balance)})</option>`).join('');
-            if (pendingTransfer.fromId && banks.some(bank => bank.id === pendingTransfer.fromId)) from.value = pendingTransfer.fromId;
-            if (pendingTransfer.toId && banks.some(bank => bank.id === pendingTransfer.toId)) to.value = pendingTransfer.toId;
+            from.innerHTML = activeBanks.map(b => `<option value="${b.id}">${escapeHtml(b.customName || b.name)} (${formatCurrency(b.balance)})</option>`).join('');
+            to.innerHTML = activeBanks.map(b => `<option value="${b.id}">${escapeHtml(b.customName || b.name)} (${formatCurrency(b.balance)})</option>`).join('');
+            if (pendingTransfer.fromId && activeBanks.some(bank => bank.id === pendingTransfer.fromId)) from.value = pendingTransfer.fromId;
+            else if (activeBanks.some(bank => bank.id === defaultBankId)) from.value = defaultBankId;
+            if (pendingTransfer.toId && activeBanks.some(bank => bank.id === pendingTransfer.toId)) to.value = pendingTransfer.toId;
             if (from.value === to.value && to.options.length > 1) to.selectedIndex = to.selectedIndex === 0 ? 1 : 0;
         }
     }
@@ -537,14 +548,17 @@
     function populateAirtimeBankSelect() {
         const sel = document.getElementById('airtimeBank');
         if (sel) {
-            sel.innerHTML = banks.map(b => `<option value="${b.id}">${b.name}</option>`).join('');
+            sel.innerHTML = banks.filter(bank => bank.is_active).map(b => `<option value="${b.id}">${escapeHtml(b.customName || b.name)}</option>`).join('');
         }
     }
 
     function populateDefaultBankSelect() {
         const sel = document.getElementById('defaultBankSelect');
         if (sel) {
-            sel.innerHTML = banks.map(b => `<option value="${b.id}" ${b.id === selectedId ? 'selected' : ''}>${b.name}</option>`).join('');
+            const activeBanks = banks.filter(bank => bank.is_active);
+            sel.innerHTML = activeBanks.length
+                ? activeBanks.map(bank => `<option value="${bank.id}" ${bank.id === defaultBankId ? 'selected' : ''}>${escapeHtml(bank.customName || bank.name)}</option>`).join('')
+                : '<option value="">No active accounts</option>';
         }
     }
 
@@ -688,20 +702,35 @@
     }
 
     // ---------- SAVE SETTINGS ----------
-    function saveSettings() {
-        const defaultBankId = document.getElementById('defaultBankSelect').value;
-        if (defaultBankId) {
+    async function saveSettings() {
+        const selectedDefaultId = document.getElementById('defaultBankSelect').value;
+        if (!selectedDefaultId) return;
+        if (saveSettingsBtn) saveSettingsBtn.disabled = true;
+        const msg = document.querySelector('#settingsPage .page-intro');
+        try {
+            const response = await fetch('/api/me/default-bank', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ bankId: selectedDefaultId }) });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error || 'Could not save default account.');
+            defaultBankId = result.defaultBankId;
             selectedId = defaultBankId;
             renderAll();
-            const msg = document.querySelector('#settingsPage p');
+            populateDefaultBankSelect();
             if (msg) {
-                msg.textContent = 'âœ… Settings saved! Default bank updated to ' + banks.find(b => b.id === defaultBankId)?.name;
-                msg.style.color = '#27ae60';
+                const savedBank = banks.find(bank => bank.id === defaultBankId);
+                msg.textContent = 'Default account saved: ' + (savedBank?.customName || savedBank?.name || 'Account');
+                msg.style.color = '#147d5a';
                 setTimeout(() => {
                     msg.textContent = 'Manage your Bankease preferences.';
                     msg.style.color = '#7b7b8d';
                 }, 3000);
             }
+        } catch (error) {
+            if (msg) {
+                msg.textContent = error.message;
+                msg.style.color = '#e74c3c';
+            }
+        } finally {
+            if (saveSettingsBtn) saveSettingsBtn.disabled = false;
         }
     }
 
@@ -774,10 +803,7 @@
     if (dropTransferButton) {
         dropTransferButton.addEventListener('click', () => {
             if (!pendingTransfer.fromId || !pendingTransfer.toId) return;
-            openPage('transfer');
-            transferMsg.textContent = `Ready to move money from ${banks.find(bank => bank.id === pendingTransfer.fromId)?.name || 'source'} to ${banks.find(bank => bank.id === pendingTransfer.toId)?.name || 'destination'}.`;
-            transferMsg.style.color = '#147d5a';
-            dropTransferPrompt.hidden = true;
+            window.location.href = `transfer.html?bank=${encodeURIComponent(pendingTransfer.fromId)}&to=${encodeURIComponent(pendingTransfer.toId)}`;
         });
     }
     if (dropTransferCancel) dropTransferCancel.addEventListener('click', clearDropTransfer);
@@ -847,6 +873,7 @@
     // ---------- INIT ----------
     loadUserData().catch(() => { window.location.href = 'login.html'; });
     const requestedPage = new URLSearchParams(window.location.search).get('page');
-    openPage(requestedPage === 'transfer' ? 'transfer' : 'dashboard');
+    if (requestedPage === 'transfer') window.location.replace('transfer.html');
+    else openPage('dashboard');
 
 })();

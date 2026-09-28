@@ -5,11 +5,21 @@ const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const {
+    generateAuthenticationOptions,
+    generateRegistrationOptions,
+    verifyAuthenticationResponse,
+    verifyRegistrationResponse
+} = require('@simplewebauthn/server');
 const supabase = require('./supabase-client');
 
 const app = express();
 const port = process.env.PORT || 3000;
-const sevenDays = 7;
+const idleTimeoutOptions = [1, 5, 15, 30];
+const defaultIdleTimeoutMinutes = 5;
+const serverInstanceId = crypto.randomUUID();
+const pendingWebAuthnCeremonies = new Map();
+const webAuthnChallengeLifetimeMs = 5 * 60 * 1000;
 const isProduction = process.env.NODE_ENV === 'production' || process.env.RENDER === 'true';
 const sessionSecret = process.env.SESSION_SECRET || (isProduction ? null : 'change-this-local-session-secret');
 app.set('trust proxy', 1);
@@ -29,8 +39,7 @@ app.use(cookieSession({
     keys: [sessionSecret || 'invalid-production-session-secret'],
     httpOnly: true,
     sameSite: 'lax',
-    secure: isProduction,
-    maxAge: 1000 * 60 * 60 * 24 * sevenDays
+    secure: isProduction
 }));
 
 if (!sessionSecret) {
@@ -63,7 +72,7 @@ function sameOrigin(request) {
 }
 
 app.use('/api', apiLimiter);
-app.use(['/api/login', '/api/register', '/api/forgot-password', '/api/reset-password'], authLimiter);
+app.use(['/api/login', '/api/register', '/api/forgot-password', '/api/reset-password', '/api/passkeys/authentication/options', '/api/passkeys/authentication/verify'], authLimiter);
 app.use('/api', (request, response, next) => {
     if (['GET', 'HEAD', 'OPTIONS'].includes(request.method) || sameOrigin(request)) return next();
     return response.status(403).json({ error: 'Cross-site request blocked.' });
@@ -71,20 +80,34 @@ app.use('/api', (request, response, next) => {
 app.use('/api', async (request, response, next) => {
     try {
         if (!request.session?.userId || !request.session?.sessionId) return next();
-        const { data: session, error } = await supabase.from('user_sessions').select('id').eq('id', request.session.sessionId).eq('user_id', request.session.userId).eq('is_active', true).maybeSingle();
+        const { data: session, error } = await supabase.from('user_sessions').select('id,last_seen_at').eq('id', request.session.sessionId).eq('user_id', request.session.userId).eq('is_active', true).maybeSingle();
         if (error) throw error;
-        if (!session) {
+        const idleTimeoutMinutes = idleTimeoutOptions.includes(request.session.idleTimeoutMinutes)
+            ? request.session.idleTimeoutMinutes
+            : defaultIdleTimeoutMinutes;
+        const lastSeenAt = session ? new Date(session.last_seen_at).getTime() : 0;
+        const isExpired = !session
+            || request.session.serverInstanceId !== serverInstanceId
+            || !Number.isFinite(lastSeenAt)
+            || Date.now() - lastSeenAt >= idleTimeoutMinutes * 60 * 1000;
+        if (isExpired) {
+            if (session) {
+                const { error: expireError } = await supabase.from('user_sessions').update({ is_active: false }).eq('id', session.id);
+                if (expireError) throw expireError;
+            }
             request.session = null;
             return next();
         }
-        const { error: updateError } = await supabase.from('user_sessions').update({ last_seen_at: new Date().toISOString() }).eq('id', session.id);
-        if (updateError) throw updateError;
+        if (request.get('x-session-activity') === 'true') {
+            const { error: updateError } = await supabase.from('user_sessions').update({ last_seen_at: new Date().toISOString() }).eq('id', session.id);
+            if (updateError) throw updateError;
+        }
         return next();
     } catch (error) { return next(error); }
 });
 
 function publicUser(user) {
-    return { id: user.id, fullName: user.full_name, email: user.email, phone: user.phone, role: user.role, status: user.status, createdAt: user.created_at };
+    return { id: user.id, fullName: user.full_name, email: user.email, phone: user.phone, role: user.role, status: user.status, defaultBankId: user.default_bank_id || null, createdAt: user.created_at };
 }
 
 async function findUserByEmail(email) {
@@ -106,13 +129,58 @@ function passwordResetTokenHash(token) {
     return crypto.createHash('sha256').update(token).digest('hex');
 }
 
+function webAuthnConfig(request) {
+    const rpID = process.env.WEBAUTHN_RP_ID || request.hostname;
+    const expectedOrigin = process.env.WEBAUTHN_ORIGIN || `${request.protocol}://${request.get('host')}`;
+    return { rpID, expectedOrigin };
+}
+
+function saveWebAuthnCeremony(options, details = {}) {
+    const now = Date.now();
+    for (const [id, ceremony] of pendingWebAuthnCeremonies) {
+        if (ceremony.expiresAt <= now) pendingWebAuthnCeremonies.delete(id);
+    }
+    if (pendingWebAuthnCeremonies.size >= 5000) {
+        const oldestId = pendingWebAuthnCeremonies.keys().next().value;
+        if (oldestId) pendingWebAuthnCeremonies.delete(oldestId);
+    }
+    const ceremonyId = crypto.randomUUID();
+    pendingWebAuthnCeremonies.set(ceremonyId, {
+        challenge: options.challenge,
+        expiresAt: now + webAuthnChallengeLifetimeMs,
+        ...details
+    });
+    return ceremonyId;
+}
+
+function takeWebAuthnCeremony(ceremonyId, type) {
+    if (typeof ceremonyId !== 'string') return null;
+    const ceremony = pendingWebAuthnCeremonies.get(ceremonyId);
+    pendingWebAuthnCeremonies.delete(ceremonyId);
+    if (!ceremony || ceremony.type !== type || ceremony.expiresAt <= Date.now()) return null;
+    return ceremony;
+}
+
+function credentialTransports(credential) {
+    const transports = credential?.response?.transports;
+    return Array.isArray(transports) ? transports.filter(value => typeof value === 'string') : [];
+}
+
+async function establishLoginSession(request, user) {
+    request.session = { userId: user.id };
+    const loggedInAt = new Date().toISOString();
+    const { error: updateError } = await supabase.from('users').update({ last_login_at: loggedInAt }).eq('id', user.id);
+    if (updateError) throw updateError;
+    await createUserSession(request, user.id);
+}
+
 function passwordIsValid(password) {
     return typeof password === 'string' && password.length >= 8;
 }
 
 async function recordAudit(actorUserId, action, targetUserId, metadata = {}) {
     const { error } = await supabase.from('audit_logs').insert({ actor_user_id: actorUserId, action, target_user_id: targetUserId || null, metadata });
-    if (error) throw error;
+    if (error) console.error('Could not record audit event:', error.message);
 }
 
 async function createUserSession(request, userId) {
@@ -123,6 +191,9 @@ async function createUserSession(request, userId) {
     }).select('id').single();
     if (error) throw error;
     request.session.sessionId = session.id;
+    request.session.serverInstanceId = serverInstanceId;
+    request.session.idleTimeoutMinutes = defaultIdleTimeoutMinutes;
+    await recordAudit(userId, 'session_started', null, { sessionId: session.id });
 }
 
 async function requireAdmin(request, response) {
@@ -174,11 +245,146 @@ app.post('/api/login', async (request, response, next) => {
         if (user.status === 'suspended') return response.status(403).json({ error: 'This account is suspended.' });
         if (loginMode === 'admin' && user.role !== 'admin') return response.status(403).json({ error: 'This account does not have administrator access.' });
         if (loginMode === 'user' && user.role === 'admin') return response.status(403).json({ error: 'Choose Admin login for this account.' });
-        request.session = { userId: user.id };
-        const loggedInAt = new Date().toISOString();
-        const { error: updateError } = await supabase.from('users').update({ last_login_at: loggedInAt }).eq('id', user.id);
+        await establishLoginSession(request, user);
+        return response.json({ user: publicUser(user) });
+    } catch (error) { return next(error); }
+});
+
+app.get('/api/passkeys/status', async (request, response, next) => {
+    try {
+        if (!requireUser(request, response)) return;
+        const { count, error } = await supabase.from('passkeys').select('id', { count: 'exact', head: true }).eq('user_id', request.session.userId);
+        if (error) throw error;
+        return response.json({ enabled: (count || 0) > 0 });
+    } catch (error) { return next(error); }
+});
+
+app.post('/api/passkeys/registration/options', async (request, response, next) => {
+    try {
+        if (!requireUser(request, response)) return;
+        const { password } = request.body || {};
+        const { data: user, error: userError } = await supabase.from('users').select('id,full_name,email,password_hash').eq('id', request.session.userId).maybeSingle();
+        if (userError) throw userError;
+        if (!user || typeof password !== 'string' || !(await bcrypt.compare(password, user.password_hash))) {
+            return response.status(401).json({ error: 'Enter your current password to enable biometric sign-in.' });
+        }
+        const { data: existingCredentials, error: credentialError } = await supabase.from('passkeys').select('credential_id,transports').eq('user_id', user.id);
+        if (credentialError) throw credentialError;
+        const { rpID } = webAuthnConfig(request);
+        const options = await generateRegistrationOptions({
+            rpName: 'Bankease',
+            rpID,
+            userID: Buffer.from(user.id),
+            userName: user.email,
+            userDisplayName: user.full_name,
+            attestationType: 'none',
+            authenticatorSelection: {
+                authenticatorAttachment: 'platform',
+                residentKey: 'required',
+                userVerification: 'required'
+            },
+            excludeCredentials: (existingCredentials || []).map(credential => ({ id: credential.credential_id, transports: credential.transports || [] }))
+        });
+        const ceremonyId = saveWebAuthnCeremony(options, { type: 'registration', userId: user.id, sessionId: request.session.sessionId });
+        return response.json({ options, ceremonyId });
+    } catch (error) { return next(error); }
+});
+
+app.post('/api/passkeys/registration/verify', async (request, response, next) => {
+    try {
+        if (!requireUser(request, response)) return;
+        const ceremony = takeWebAuthnCeremony(request.body?.ceremonyId, 'registration');
+        if (!ceremony || ceremony.userId !== request.session.userId || ceremony.sessionId !== request.session.sessionId) {
+            return response.status(400).json({ error: 'Passkey setup expired. Please try again.' });
+        }
+        const { expectedOrigin, rpID } = webAuthnConfig(request);
+        const verification = await verifyRegistrationResponse({
+            response: request.body?.credential,
+            expectedChallenge: ceremony.challenge,
+            expectedOrigin,
+            expectedRPID: rpID,
+            requireUserVerification: true
+        });
+        if (!verification.verified || !verification.registrationInfo) {
+            return response.status(400).json({ error: 'The device could not verify this passkey.' });
+        }
+        const { credential } = verification.registrationInfo;
+        const { error } = await supabase.from('passkeys').insert({
+            user_id: request.session.userId,
+            credential_id: credential.id,
+            public_key: Buffer.from(credential.publicKey).toString('base64url'),
+            counter: credential.counter,
+            transports: credentialTransports(request.body?.credential),
+            device_type: verification.registrationInfo.credentialDeviceType,
+            backed_up: verification.registrationInfo.credentialBackedUp
+        });
+        if (error) throw error;
+        return response.json({ enabled: true });
+    } catch (error) { return next(error); }
+});
+
+app.delete('/api/passkeys', async (request, response, next) => {
+    try {
+        if (!requireUser(request, response)) return;
+        const { password } = request.body || {};
+        const { data: user, error: userError } = await supabase.from('users').select('password_hash').eq('id', request.session.userId).maybeSingle();
+        if (userError) throw userError;
+        if (!user || typeof password !== 'string' || !(await bcrypt.compare(password, user.password_hash))) {
+            return response.status(401).json({ error: 'Enter your current password to disable biometric sign-in.' });
+        }
+        const { error } = await supabase.from('passkeys').delete().eq('user_id', request.session.userId);
+        if (error) throw error;
+        return response.json({ enabled: false });
+    } catch (error) { return next(error); }
+});
+
+app.post('/api/passkeys/authentication/options', async (request, response, next) => {
+    try {
+        const { rpID } = webAuthnConfig(request);
+        const options = await generateAuthenticationOptions({ rpID, userVerification: 'required' });
+        const ceremonyId = saveWebAuthnCeremony(options, { type: 'authentication', loginMode: request.body?.loginMode || 'user' });
+        return response.json({ options, ceremonyId });
+    } catch (error) { return next(error); }
+});
+
+app.post('/api/passkeys/authentication/verify', async (request, response, next) => {
+    try {
+        const ceremony = takeWebAuthnCeremony(request.body?.ceremonyId, 'authentication');
+        const loginMode = request.body?.loginMode || 'user';
+        if (!ceremony || !['user', 'admin'].includes(loginMode) || ceremony.loginMode !== loginMode) {
+            return response.status(400).json({ error: 'Passkey sign-in expired. Please try again.' });
+        }
+        const credentialId = request.body?.credential?.id;
+        if (typeof credentialId !== 'string') return response.status(400).json({ error: 'Passkey response is invalid.' });
+        const { data: passkey, error: passkeyError } = await supabase.from('passkeys').select('id,user_id,credential_id,public_key,counter,transports').eq('credential_id', credentialId).maybeSingle();
+        if (passkeyError) throw passkeyError;
+        if (!passkey) return response.status(401).json({ error: 'No matching passkey was found.' });
+        const userHandle = request.body?.credential?.response?.userHandle;
+        if (userHandle !== Buffer.from(passkey.user_id).toString('base64url')) {
+            return response.status(401).json({ error: 'The passkey does not match this account.' });
+        }
+        const { expectedOrigin, rpID } = webAuthnConfig(request);
+        const verification = await verifyAuthenticationResponse({
+            response: request.body.credential,
+            expectedChallenge: ceremony.challenge,
+            expectedOrigin,
+            expectedRPID: rpID,
+            requireUserVerification: true,
+            credential: {
+                id: passkey.credential_id,
+                publicKey: Buffer.from(passkey.public_key, 'base64url'),
+                counter: Number(passkey.counter),
+                transports: passkey.transports || []
+            }
+        });
+        if (!verification.verified) return response.status(401).json({ error: 'Passkey verification failed.' });
+        const { data: user, error: userError } = await supabase.from('users').select('*').eq('id', passkey.user_id).maybeSingle();
+        if (userError) throw userError;
+        if (!user || user.status !== 'active') return response.status(403).json({ error: 'This account is unavailable.' });
+        if ((loginMode === 'admin') !== (user.role === 'admin')) return response.status(403).json({ error: 'Choose the correct login type for this account.' });
+        const { error: updateError } = await supabase.from('passkeys').update({ counter: verification.authenticationInfo.newCounter, last_used_at: new Date().toISOString() }).eq('id', passkey.id);
         if (updateError) throw updateError;
-        await createUserSession(request, user.id);
+        await establishLoginSession(request, user);
         return response.json({ user: publicUser(user) });
     } catch (error) { return next(error); }
 });
@@ -243,9 +449,33 @@ app.post('/api/logout', async (request, response, next) => {
         if (request.session?.sessionId) {
             const { error } = await supabase.from('user_sessions').update({ is_active: false }).eq('id', request.session.sessionId);
             if (error) throw error;
+            await recordAudit(request.session.userId, 'session_ended', null, { sessionId: request.session.sessionId });
         }
     } catch (error) { return next(error); }
     request.session = null;
+    return response.status(204).end();
+});
+
+app.get('/api/session/settings', (request, response) => {
+    if (!requireUser(request, response)) return;
+    const idleTimeoutMinutes = idleTimeoutOptions.includes(request.session.idleTimeoutMinutes)
+        ? request.session.idleTimeoutMinutes
+        : defaultIdleTimeoutMinutes;
+    return response.json({ idleTimeoutMinutes });
+});
+
+app.post('/api/session/settings', (request, response) => {
+    if (!requireUser(request, response)) return;
+    const { idleTimeoutMinutes } = request.body || {};
+    if (!idleTimeoutOptions.includes(idleTimeoutMinutes)) {
+        return response.status(400).json({ error: 'Choose a valid automatic logout time.' });
+    }
+    request.session.idleTimeoutMinutes = idleTimeoutMinutes;
+    return response.json({ idleTimeoutMinutes });
+});
+
+app.post('/api/session/heartbeat', (request, response) => {
+    if (!requireUser(request, response)) return;
     return response.status(204).end();
 });
 
@@ -262,9 +492,13 @@ app.get('/api/me', async (request, response, next) => {
 app.get('/api/banks', async (request, response, next) => {
     try {
         if (!requireUser(request, response)) return;
-        const { data: banks, error } = await supabase.from('banks').select('id,name,last_digits,balance,full_name,account_type').eq('user_id', request.session.userId).order('created_at');
+        const [{ data: banks, error }, { data: user, error: userError }] = await Promise.all([
+            supabase.from('banks').select('id,name,custom_name,last_digits,balance,full_name,account_type,is_active,low_balance_threshold').eq('user_id', request.session.userId).order('created_at'),
+            supabase.from('users').select('default_bank_id').eq('id', request.session.userId).maybeSingle()
+        ]);
         if (error) throw error;
-        return response.json({ banks });
+        if (userError) throw userError;
+        return response.json({ banks, defaultBankId: user?.default_bank_id || null });
     } catch (error) { return next(error); }
 });
 
@@ -275,13 +509,82 @@ app.post('/api/banks', async (request, response, next) => {
         const numericBalance = balance === undefined || balance === '' ? 0 : Number(balance);
         if (typeof name !== 'string' || !name.trim() || typeof accountNumber !== 'string' || !/^\d{4}$/.test(accountNumber.replace(/\s/g, ''))) return response.status(400).json({ error: 'Enter a bank and exactly the last 4 digits of the account or card.' });
         if (!Number.isFinite(numericBalance) || numericBalance < 0) return response.status(422).json({ error: 'Balance must be zero or greater.' });
-        const bank = { user_id: request.session.userId, name: name.trim(), last_digits: accountNumber.replace(/\s/g, '').slice(-4), balance: numericBalance, full_name: name.trim(), account_type: accountType || 'savings' };
-        const { data, error } = await supabase.from('banks').insert(bank).select('id,name,last_digits,balance,full_name,account_type').single();
+        const bank = { user_id: request.session.userId, name: name.trim(), custom_name: null, last_digits: accountNumber.replace(/\s/g, '').slice(-4), balance: numericBalance, full_name: name.trim(), account_type: accountType || 'savings' };
+        const { data, error } = await supabase.from('banks').insert(bank).select('id,name,custom_name,last_digits,balance,full_name,account_type,is_active,low_balance_threshold').single();
         if (error) {
             if (error.code === '23505') return response.status(409).json({ error: 'This bank is already linked.' });
             throw error;
         }
+        await recordAudit(request.session.userId, 'bank_linked', null, { bankId: data.id, bankName: data.name });
         return response.status(201).json({ bank: data });
+    } catch (error) { return next(error); }
+});
+
+app.patch('/api/banks/:id', async (request, response, next) => {
+    try {
+        if (!requireUser(request, response)) return;
+        const { customName, accountNumber, accountType, lowBalanceThreshold } = request.body || {};
+        const updates = {};
+        if (customName !== undefined) {
+            if (typeof customName !== 'string' || customName.trim().length > 60) return response.status(400).json({ error: 'Account name must be 60 characters or fewer.' });
+            updates.custom_name = customName.trim() || null;
+        }
+        if (accountNumber !== undefined) {
+            if (typeof accountNumber !== 'string' || !/^\d{4}$/.test(accountNumber.replace(/\s/g, ''))) return response.status(400).json({ error: 'Enter exactly the last 4 digits of the account or card.' });
+            updates.last_digits = accountNumber.replace(/\s/g, '');
+        }
+        if (accountType !== undefined) {
+            if (!['cheque', 'savings', 'credit', 'investment'].includes(accountType)) return response.status(400).json({ error: 'Choose a valid account type.' });
+            updates.account_type = accountType;
+        }
+        if (lowBalanceThreshold !== undefined) {
+            if (lowBalanceThreshold === null || lowBalanceThreshold === '') updates.low_balance_threshold = null;
+            else {
+                const threshold = Number(lowBalanceThreshold);
+                if (!Number.isFinite(threshold) || threshold < 0 || threshold > 9999999999.99) return response.status(422).json({ error: 'Low-balance alert must be a valid amount of zero or more.' });
+                updates.low_balance_threshold = threshold;
+            }
+        }
+        if (!Object.keys(updates).length) return response.status(400).json({ error: 'Choose at least one account detail to update.' });
+        const { data: bank, error } = await supabase.from('banks').update(updates).eq('id', request.params.id).eq('user_id', request.session.userId).select('id,name,custom_name,last_digits,balance,full_name,account_type,is_active,low_balance_threshold').maybeSingle();
+        if (error) throw error;
+        if (!bank) return response.status(404).json({ error: 'Linked account was not found.' });
+        await recordAudit(request.session.userId, 'bank_updated', null, { bankId: bank.id, bankName: bank.name, fields: Object.keys(updates) });
+        return response.json({ bank });
+    } catch (error) { return next(error); }
+});
+
+app.patch('/api/banks/:id/status', async (request, response, next) => {
+    try {
+        if (!requireUser(request, response)) return;
+        const { isActive } = request.body || {};
+        if (typeof isActive !== 'boolean') return response.status(400).json({ error: 'Choose whether to pause or reactivate this account.' });
+        const { data: status, error } = await supabase.rpc('set_bank_active_state', {
+            p_user_id: request.session.userId,
+            p_bank_id: request.params.id,
+            p_is_active: isActive
+        });
+        if (error) {
+            const statusCode = error.code === 'P0002' ? 404 : error.code === '22023' ? 400 : 409;
+            return response.status(statusCode).json({ error: error.message });
+        }
+        const { data: bank, error: bankError } = await supabase.from('banks').select('id,name,custom_name,last_digits,balance,full_name,account_type,is_active,low_balance_threshold').eq('id', request.params.id).eq('user_id', request.session.userId).single();
+        if (bankError) throw bankError;
+        return response.json({ bank, status });
+    } catch (error) { return next(error); }
+});
+
+app.patch('/api/me/default-bank', async (request, response, next) => {
+    try {
+        if (!requireUser(request, response)) return;
+        const bankId = request.body?.bankId;
+        if (bankId !== null && (typeof bankId !== 'string' || !bankId)) return response.status(400).json({ error: 'Choose a valid default account.' });
+        const { data: defaultBankId, error } = await supabase.rpc('set_default_bank', { p_user_id: request.session.userId, p_bank_id: bankId });
+        if (error) {
+            const status = error.code === 'P0002' ? 404 : 400;
+            return response.status(status).json({ error: error.message });
+        }
+        return response.json({ defaultBankId });
     } catch (error) { return next(error); }
 });
 
@@ -291,10 +594,53 @@ app.delete('/api/banks/:id', async (request, response, next) => {
         const { data: deletedBank, error } = await supabase.from('banks').delete()
             .eq('id', request.params.id)
             .eq('user_id', request.session.userId)
-            .select('id')
+            .select('id,name')
             .maybeSingle();
         if (error) throw error;
         if (!deletedBank) return response.status(404).json({ error: 'Linked account was not found.' });
+        await recordAudit(request.session.userId, 'bank_unlinked', null, { bankId: deletedBank.id, bankName: deletedBank.name });
+        return response.status(204).end();
+    } catch (error) { return next(error); }
+});
+
+app.get('/api/beneficiaries', async (request, response, next) => {
+    try {
+        if (!requireUser(request, response)) return;
+        const { data: beneficiaries, error } = await supabase.from('beneficiaries').select('id,name,bank_name,account_last_digits,contact,created_at').eq('user_id', request.session.userId).order('name');
+        if (error) throw error;
+        return response.json({ beneficiaries });
+    } catch (error) { return next(error); }
+});
+
+app.post('/api/beneficiaries', async (request, response, next) => {
+    try {
+        if (!requireUser(request, response)) return;
+        const { name, bankName, accountLastDigits, contact } = request.body || {};
+        if (typeof name !== 'string' || !name.trim() || name.trim().length > 100) return response.status(400).json({ error: 'Enter a beneficiary name (up to 100 characters).' });
+        if (typeof bankName !== 'string' || !bankName.trim() || bankName.trim().length > 80) return response.status(400).json({ error: 'Enter the beneficiary bank name (up to 80 characters).' });
+        if (typeof accountLastDigits !== 'string' || !/^\d{4}$/.test(accountLastDigits.trim())) return response.status(400).json({ error: 'Enter only the last 4 digits of the beneficiary account.' });
+        if (contact !== undefined && (typeof contact !== 'string' || contact.trim().length > 100)) return response.status(400).json({ error: 'Contact details must be 100 characters or fewer.' });
+        const { data: beneficiary, error } = await supabase.from('beneficiaries').insert({
+            user_id: request.session.userId,
+            name: name.trim(),
+            bank_name: bankName.trim(),
+            account_last_digits: accountLastDigits.trim(),
+            contact: contact?.trim() || null
+        }).select('id,name,bank_name,account_last_digits,contact,created_at').single();
+        if (error?.code === '23505') return response.status(409).json({ error: 'That beneficiary account is already saved.' });
+        if (error) throw error;
+        await recordAudit(request.session.userId, 'beneficiary_added', null, { beneficiaryId: beneficiary.id, name: beneficiary.name, bankName: beneficiary.bank_name });
+        return response.status(201).json({ beneficiary });
+    } catch (error) { return next(error); }
+});
+
+app.delete('/api/beneficiaries/:id', async (request, response, next) => {
+    try {
+        if (!requireUser(request, response)) return;
+        const { data: beneficiary, error } = await supabase.from('beneficiaries').delete().eq('id', request.params.id).eq('user_id', request.session.userId).select('id,name,bank_name').maybeSingle();
+        if (error) throw error;
+        if (!beneficiary) return response.status(404).json({ error: 'Beneficiary was not found.' });
+        await recordAudit(request.session.userId, 'beneficiary_removed', null, { beneficiaryId: beneficiary.id, name: beneficiary.name, bankName: beneficiary.bank_name });
         return response.status(204).end();
     } catch (error) { return next(error); }
 });
@@ -308,7 +654,30 @@ app.post('/api/transfers', async (request, response, next) => {
         if (!Number.isFinite(value) || value <= 0) return response.status(422).json({ error: 'Transfer amount must be greater than zero.' });
         const { data: transfer, error } = await supabase.rpc('transfer_between_banks', { p_user_id: request.session.userId, p_from_bank_id: fromId, p_to_bank_id: toId, p_amount: value });
         if (error) {
-            const status = error.code === '22003' ? 409 : error.code === 'P0002' ? 404 : 400;
+            const status = ['22003', '55000'].includes(error.code) ? 409 : error.code === 'P0002' ? 404 : 400;
+            return response.status(status).json({ error: error.message });
+        }
+        return response.status(201).json({ transfer });
+    } catch (error) { return next(error); }
+});
+
+app.post('/api/beneficiary-transfers', async (request, response, next) => {
+    try {
+        if (!requireUser(request, response)) return;
+        const { fromId, beneficiaryId, amount, note } = request.body || {};
+        const value = Number(amount);
+        if (!fromId || !beneficiaryId) return response.status(400).json({ error: 'Choose a source account and beneficiary.' });
+        if (!Number.isFinite(value) || value <= 0) return response.status(422).json({ error: 'Transfer amount must be greater than zero.' });
+        if (note !== undefined && (typeof note !== 'string' || note.trim().length > 240)) return response.status(400).json({ error: 'Transfer note must be 240 characters or fewer.' });
+        const { data: transfer, error } = await supabase.rpc('transfer_to_beneficiary', {
+            p_user_id: request.session.userId,
+            p_from_bank_id: fromId,
+            p_beneficiary_id: beneficiaryId,
+            p_amount: value,
+            p_note: typeof note === 'string' ? note.trim() : null
+        });
+        if (error) {
+            const status = ['22003', '55000'].includes(error.code) ? 409 : error.code === 'P0002' ? 404 : 400;
             return response.status(status).json({ error: error.message });
         }
         return response.status(201).json({ transfer });
@@ -324,7 +693,7 @@ app.post('/api/airtime', async (request, response, next) => {
         if (!Number.isFinite(value) || value <= 0) return response.status(422).json({ error: 'Airtime amount must be greater than zero.' });
         const { data: purchase, error } = await supabase.rpc('purchase_airtime', { p_user_id: request.session.userId, p_bank_id: bankId, p_network: network.trim(), p_phone: phone.trim(), p_amount: value });
         if (error) {
-            const status = error.code === '22003' ? 409 : error.code === 'P0002' ? 404 : 400;
+            const status = ['22003', '55000'].includes(error.code) ? 409 : error.code === 'P0002' ? 404 : 400;
             return response.status(status).json({ error: error.message });
         }
         return response.status(201).json({ purchase });
@@ -430,7 +799,7 @@ app.patch('/api/admin/sessions/:id', async (request, response, next) => {
 app.get('/api/admin/audit', async (request, response, next) => {
     try {
         if (!await requireAdmin(request, response)) return;
-        const { data: audit, error } = await supabase.from('audit_logs').select('id,actor_user_id,target_user_id,action,metadata,created_at').order('created_at', { ascending: false }).limit(100);
+        const { data: audit, error } = await supabase.from('audit_logs').select('id,actor_user_id,target_user_id,action,metadata,created_at').order('created_at', { ascending: false }).limit(500);
         if (error) throw error;
         const userIds = [...new Set((audit || []).flatMap(log => [log.actor_user_id, log.target_user_id]).filter(Boolean))];
         const { data: users, error: userError } = userIds.length ? await supabase.from('users').select('id,full_name,email').in('id', userIds) : { data: [], error: null };

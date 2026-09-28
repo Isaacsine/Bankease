@@ -49,12 +49,12 @@ function filteredAudit() {
     const query = ($('#auditSearch')?.value || '').toLowerCase();
     const action = $('#auditActionFilter')?.value || '';
     return state.audit.filter(log => {
-        const searchable = `${log.action} ${log.actor?.full_name || ''} ${log.target?.full_name || ''} ${JSON.stringify(log.metadata || {})}`.toLowerCase();
+        const searchable = `${log.action} ${log.actor?.full_name || ''} ${log.actor?.email || ''} ${log.target?.full_name || ''} ${log.target?.email || ''} ${JSON.stringify(log.metadata || {})}`.toLowerCase();
         return (!query || searchable.includes(query)) && (!action || log.action === action);
     });
 }
 
-function renderAudit() { $('#auditTable').innerHTML = filteredAudit().map(log => `<tr><td><strong>${escapeHtml(log.action)}</strong></td><td>${escapeHtml(log.actor?.full_name || 'System')}</td><td>${escapeHtml(log.target?.full_name || 'System')}</td><td>${escapeHtml(JSON.stringify(log.metadata || {}))}</td><td>${date(log.created_at)}</td></tr>`).join('') || '<tr><td colspan="5" class="empty">No audit events match your filters.</td></tr>'; }
+function renderAudit() { $('#auditTable').innerHTML = filteredAudit().map(log => `<tr><td><strong>${escapeHtml(log.action)}</strong></td><td>${escapeHtml(log.actor?.full_name || 'System')}</td><td>${escapeHtml(log.target?.full_name || log.metadata?.recipientName || log.metadata?.bankName || 'Not applicable')}</td><td>${escapeHtml(JSON.stringify(log.metadata || {}))}</td><td>${date(log.created_at)}</td></tr>`).join('') || '<tr><td colspan="5" class="empty">No audit events match your filters.</td></tr>'; }
 
 async function load() {
     try {
@@ -102,12 +102,12 @@ $('#auditActionFilter')?.addEventListener('change', renderAudit);
 $('#exportAudit')?.addEventListener('click', () => {
     const rows = filteredAudit();
     const csvValue = value => `"${String(value ?? '').replace(/"/g, '""')}"`;
-    const csv = [['Action', 'Actor', 'Target', 'Details', 'Time'], ...rows.map(log => [log.action, log.actor?.full_name || 'System', log.target?.full_name || 'System', JSON.stringify(log.metadata || {}), date(log.created_at)])].map(row => row.map(csvValue).join(',')).join('\n');
+    const csv = [['Action', 'Actor', 'Target', 'Details', 'Time'], ...rows.map(log => [log.action, log.actor?.full_name || 'System', log.target?.full_name || log.metadata?.recipientName || log.metadata?.bankName || 'Not applicable', JSON.stringify(log.metadata || {}), date(log.created_at)])].map(row => row.map(csvValue).join(',')).join('\n');
     const link = document.createElement('a');
     link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
     link.download = `bankease-audit-${new Date().toISOString().slice(0, 10)}.csv`;
     link.click();
-    URL.revokeObjectURL(link.href);
+    window.setTimeout(() => URL.revokeObjectURL(link.href), 1000);
 });
 $('#refreshButton')?.addEventListener('click', async (event) => {
     const button = event.currentTarget;

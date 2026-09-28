@@ -360,7 +360,7 @@
                     </div>
                     <div class="stat">
                         <div class="number" id="inactiveCount">0</div>
-                        <div class="label">Inactive</div>
+                        <div class="label">Paused</div>
                     </div>
                     <div class="stat">
                         <div class="number" id="cardsCount">0</div>
@@ -371,9 +371,13 @@
 
             <!-- Quick Actions -->
             <div class="quick-action-row">
-                <button class="quick-action-btn" onclick="location.href='dashboard.html?page=transfer'">
+                <button class="quick-action-btn" onclick="location.href='transfer.html'">
                     <i class="fas fa-exchange-alt"></i>
                     <span>Transfer</span>
+                </button>
+                <button class="quick-action-btn" onclick="location.href='beneficiaries.html'">
+                    <i class="fas fa-user-group"></i>
+                    <span>Beneficiaries</span>
                 </button>
                 <button class="quick-action-btn" onclick="location.href='cards.html'">
                     <i class="fas fa-credit-card"></i>
@@ -394,7 +398,7 @@
             <div class="account-filter">
                 <button class="account-filter-btn active" data-filter="all">All</button>
                 <button class="account-filter-btn" data-filter="active">Active</button>
-                <button class="account-filter-btn" data-filter="inactive">Inactive</button>
+                <button class="account-filter-btn" data-filter="paused">Paused</button>
                 <button class="account-filter-btn" data-filter="cheque">Cheque</button>
                 <button class="account-filter-btn" data-filter="savings">Savings</button>
                 <button class="account-filter-btn" data-filter="credit">Credit</button>
@@ -495,7 +499,7 @@
         const money = value => 'R' + Number(value || 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
         const escapeHtml = value => String(value).replace(/[&<>'"]/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character]));
         const bankTransactions = bankId => allTransactions.filter(transaction => transaction.from_bank_id === bankId || transaction.to_bank_id === bankId);
-        const isActive = bank => Number(bank.balance) > 0 || bankTransactions(bank.id).length > 0;
+        const isActive = bank => bank.is_active !== false;
         const displayType = type => String(type || 'savings').replace(/^./, letter => letter.toUpperCase()) + (type === 'cheque' ? ' Account' : type === 'credit' ? ' Card' : '');
 
         function renderBankIcon(bank) {
@@ -506,15 +510,15 @@
         function renderAccounts() {
             const filteredBanks = allBanks.filter(bank => {
                 if (activeFilter === 'active') return isActive(bank);
-                if (activeFilter === 'inactive') return !isActive(bank);
+                if (activeFilter === 'paused') return !isActive(bank);
                 return activeFilter === 'all' || bank.account_type === activeFilter;
             });
             document.querySelector('.account-list-header span').textContent = filteredBanks.length + ' account' + (filteredBanks.length === 1 ? '' : 's');
             document.getElementById('accountList').innerHTML = '<div class="account-list-header"><h4>Linked Accounts</h4><span>' + filteredBanks.length + ' account' + (filteredBanks.length === 1 ? '' : 's') + '</span></div>' + (filteredBanks.length ? filteredBanks.map(bank => {
                 const status = isActive(bank) ? 'active' : 'inactive';
-                return '<div class="account-item-detail" data-bank-id="' + escapeHtml(bank.id) + '"><div class="left"><div class="icon">' + renderBankIcon(bank) + '</div><div class="info"><div class="name">' + escapeHtml(bank.name) + '</div><div class="number">*****</div><div class="type">' + escapeHtml(displayType(bank.account_type)) + '</div></div></div><div class="right"><div class="balance">' + money(bank.balance) + '</div><div class="status ' + status + '">' + (status === 'active' ? 'Active' : 'Inactive') + '</div></div></div>';
+                return '<div class="account-item-detail" data-bank-id="' + escapeHtml(bank.id) + '"><div class="left"><div class="icon">' + renderBankIcon(bank) + '</div><div class="info"><div class="name">' + escapeHtml(bank.custom_name || bank.name) + '</div><div class="number">**** ' + escapeHtml(bank.last_digits) + '</div><div class="type">' + escapeHtml(displayType(bank.account_type)) + '</div></div></div><div class="right"><div class="balance">' + money(bank.balance) + '</div><div class="status ' + status + '">' + (status === 'active' ? 'Active' : 'Paused') + '</div></div></div>';
             }).join('') : '<p class="empty-accounts">No accounts match this filter.</p>');
-            document.querySelectorAll('[data-bank-id]').forEach(item => item.addEventListener('click', () => { window.location.href = 'dashboard.html'; }));
+            document.querySelectorAll('[data-bank-id]').forEach(item => item.addEventListener('click', () => { window.location.href = 'bank-details.html?id=' + encodeURIComponent(item.dataset.bankId); }));
         }
 
         function renderRecentActivity() {
@@ -527,7 +531,7 @@
                 const title = transaction.title || (destination ? 'Transfer to ' + destination : 'Bank activity');
                 const bankLabel = source ? ' - ' + source : destination ? ' - ' + destination : '';
                 const icon = title.toLowerCase().includes('transfer') ? 'fa-exchange-alt' : amount > 0 ? 'fa-wallet' : 'fa-receipt';
-                return '<div class="recent-item"><div class="left"><div class="icon"><i class="fas ' + icon + '"></i></div><div class="info"><div class="desc">' + escapeHtml(title + bankLabel) + '</div><div class="date">' + new Date(transaction.created_at).toLocaleString() + '</div></div></div><div class="amount ' + (amount < 0 ? 'negative' : 'positive') + '">' + (amount < 0 ? '-' : '+') + money(Math.abs(amount)) + '</div></div>';
+                return '<div class="recent-item"><div class="left"><div class="icon"><i class="fas ' + icon + '"></i></div><div class="info"><div class="desc">' + escapeHtml(title + bankLabel) + '</div><div class="date">' + new Date(transaction.created_at).toLocaleString() + '</div>' + (transaction.memo ? '<div class="date">' + escapeHtml(transaction.memo) + '</div>' : '') + '</div></div><div class="amount ' + (amount < 0 ? 'negative' : 'positive') + '">' + (amount < 0 ? '-' : '+') + money(Math.abs(amount)) + '</div></div>';
             }).join('') : '<p>No activity recorded yet.</p>';
         }
 

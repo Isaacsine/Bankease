@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bankease - Beneficiaries</title>
+    <link rel="icon" type="image/png" href="assets/iconLogo.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <style>
+        .beneficiary-page { max-width: 920px; margin: 0 auto; padding: 20px 16px 104px; }
+        .beneficiary-layout { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(260px, .8fr); gap: 20px; align-items: start; }
+        .beneficiary-panel { background: #fff; border: 1px solid #e7eaee; border-radius: 8px; padding: 20px; }
+        .beneficiary-panel h3 { margin: 0 0 16px; font-size: 17px; }
+        .beneficiary-list { display: grid; gap: 0; }
+        .beneficiary-item { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 14px 0; border-bottom: 1px solid #edf0f2; }
+        .beneficiary-item:last-child { border-bottom: 0; }
+        .beneficiary-mark { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 50%; background: #e8f4f1; color: #147d5a; }
+        .beneficiary-name { font-weight: 700; overflow-wrap: anywhere; }
+        .beneficiary-meta { margin-top: 3px; color: #737d86; font-size: 12px; line-height: 1.4; overflow-wrap: anywhere; }
+        .beneficiary-remove { width: 36px; height: 36px; border: 0; background: transparent; color: #9a4d45; cursor: pointer; }
+        .beneficiary-form label { display: block; margin: 12px 0 6px; font-size: 13px; font-weight: 600; }
+        .beneficiary-form input { width: 100%; min-height: 42px; padding: 9px 11px; border: 1px solid #cbd2d8; border-radius: 5px; font: inherit; }
+        .beneficiary-form .btn-primary { margin-top: 18px; }
+        .ledger-notice { margin: 0 0 18px; padding: 12px 14px; border-left: 3px solid #d08a33; background: #fff8ed; color: #60451f; font-size: 13px; line-height: 1.5; }
+        .beneficiary-empty { padding: 24px 0; color: #737d86; font-size: 14px; }
+        @media (max-width: 680px) { .beneficiary-layout { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <div class="header">
+            <a class="logo-wrapper" href="dashboard.html" aria-label="Go to dashboard"><img class="logo-icon" src="assets/bankeaseLogo.png" alt="Bankease icon"><div><div class="logo-text">BANKE<span class="highlight">ASE</span></div><div class="logo-tagline">ONE CARD. ALL BANKS.</div></div></a>
+            <div class="header-actions"><a href="accounts.html" aria-label="Back to accounts"><i class="fas fa-arrow-left"></i></a></div>
+        </div>
+        <div class="page-title-block"><h2>Beneficiaries</h2><p>Saved people and recipient details</p></div>
+        <main class="beneficiary-page">
+            <p class="ledger-notice">Beneficiary transfers are recorded against your Bankease account balance for tracking. This version does not send funds through a bank or payment network. Only the last four account digits are stored.</p>
+            <div class="beneficiary-layout">
+                <section class="beneficiary-panel" aria-labelledby="beneficiariesHeading">
+                    <h3 id="beneficiariesHeading">Saved beneficiaries <span id="beneficiaryCount"></span></h3>
+                    <div class="beneficiary-list" id="beneficiaryList" aria-live="polite"><p class="beneficiary-empty">Loading beneficiaries...</p></div>
+                </section>
+                <form class="beneficiary-panel beneficiary-form" id="beneficiaryForm">
+                    <h3>Add beneficiary</h3>
+                    <label for="beneficiaryName">Name</label>
+                    <input id="beneficiaryName" name="name" maxlength="100" autocomplete="name" required>
+                    <label for="beneficiaryBank">Bank</label>
+                    <input id="beneficiaryBank" name="bankName" maxlength="80" autocomplete="organization" required>
+                    <label for="beneficiaryDigits">Account last four digits</label>
+                    <input id="beneficiaryDigits" name="accountLastDigits" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="1234" required>
+                    <label for="beneficiaryContact">Email or phone <span>(optional)</span></label>
+                    <input id="beneficiaryContact" name="contact" maxlength="100" autocomplete="email">
+                    <button class="btn-primary full-width-btn" type="submit"><i class="fas fa-user-plus"></i> Save beneficiary</button>
+                    <p class="form-message" id="beneficiaryMessage" role="status"></p>
+                </form>
+            </div>
+        </main>
+        <div class="bottom-nav">
+            <button class="nav-item" onclick="location.href='dashboard.html'"><i class="fas fa-th"></i> Dashboard</button>
+            <button class="nav-item" onclick="location.href='accounts.html'"><i class="fas fa-wallet"></i> Accounts</button>
+            <button class="nav-item" onclick="location.href='transfer.html'"><i class="fas fa-exchange-alt"></i> Transfer</button>
+            <button class="nav-item active"><i class="fas fa-user-group"></i> Beneficiaries</button>
+        </div>
+    </div>
+    <script src="i18n.js"></script>
+    <script src="theme.js"></script>
+    <script>
+        const beneficiaryList = document.getElementById('beneficiaryList');
+        const beneficiaryForm = document.getElementById('beneficiaryForm');
+        const beneficiaryMessage = document.getElementById('beneficiaryMessage');
+        const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
+
+        function showMessage(text, type) {
+            beneficiaryMessage.textContent = text;
+            beneficiaryMessage.className = 'form-message ' + (type || '');
+        }
+
+        function renderBeneficiaries(beneficiaries) {
+            document.getElementById('beneficiaryCount').textContent = `(${beneficiaries.length})`;
+            beneficiaryList.innerHTML = beneficiaries.length ? beneficiaries.map(beneficiary => `
+                <article class="beneficiary-item">
+                    <span class="beneficiary-mark"><i class="fas fa-user"></i></span>
+                    <div><div class="beneficiary-name">${escapeHtml(beneficiary.name)}</div><div class="beneficiary-meta">${escapeHtml(beneficiary.bank_name)} **** ${escapeHtml(beneficiary.account_last_digits)}${beneficiary.contact ? ' | ' + escapeHtml(beneficiary.contact) : ''}</div></div>
+                    <button class="beneficiary-remove" type="button" data-beneficiary-id="${escapeHtml(beneficiary.id)}" aria-label="Remove ${escapeHtml(beneficiary.name)}" title="Remove beneficiary"><i class="fas fa-trash"></i></button>
+                </article>`).join('') : '<p class="beneficiary-empty">No beneficiaries saved yet.</p>';
+        }
+
+        async function loadBeneficiaries() {
+            const response = await fetch('/api/beneficiaries', { credentials: 'same-origin' });
+            if (response.status === 401) { window.location.href = 'login.html'; return; }
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error || 'Could not load beneficiaries.');
+            renderBeneficiaries(result.beneficiaries);
+        }
+
+        beneficiaryForm.addEventListener('submit', async event => {
+            event.preventDefault();
+            const button = beneficiaryForm.querySelector('button[type="submit"]');
+            button.disabled = true;
+            showMessage('Saving beneficiary...', '');
+            try {
+                const response = await fetch('/api/beneficiaries', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.fromEntries(new FormData(beneficiaryForm))) });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.error || 'Could not save beneficiary.');
+                beneficiaryForm.reset();
+                showMessage('Beneficiary saved.', 'success');
+                await loadBeneficiaries();
+            } catch (error) { showMessage(error.message, 'error'); }
+            finally { button.disabled = false; }
+        });
+
+        beneficiaryList.addEventListener('click', async event => {
+            const button = event.target.closest('[data-beneficiary-id]');
+            if (!button || !window.confirm('Remove this beneficiary?')) return;
+            button.disabled = true;
+            try {
+                const response = await fetch('/api/beneficiaries/' + encodeURIComponent(button.dataset.beneficiaryId), { method: 'DELETE', credentials: 'same-origin' });
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(result.error || 'Could not remove beneficiary.');
+                await loadBeneficiaries();
+                showMessage('Beneficiary removed.', 'success');
+            } catch (error) { showMessage(error.message, 'error'); button.disabled = false; }
+        });
+
+        loadBeneficiaries().catch(error => showMessage(error.message, 'error'));
+    </script>
+</body>
+</html>

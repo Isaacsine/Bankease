@@ -432,7 +432,7 @@
                         <div class="settings-subtext">Use fingerprint or face ID</div>
                     </div>
                     <label class="settings-toggle" aria-label="Biometric login">
-                        <input type="checkbox" checked />
+                        <input type="checkbox" data-passkey-toggle />
                         <span class="slider"></span>
                     </label>
                 </div>
@@ -551,25 +551,21 @@
                         <div class="settings-label"><i class="fas fa-lock settings-icon"></i> Auto-Lock</div>
                         <div class="settings-subtext">Auto-lock after inactivity</div>
                     </div>
-                    <select class="settings-select short" title="Auto-lock duration" aria-label="Auto-lock duration">
-                        <option>Never</option>
-                        <option>1 minute</option>
-                        <option selected>5 minutes</option>
-                        <option>15 minutes</option>
-                        <option>30 minutes</option>
+                    <select class="settings-select short" title="Automatic logout time" aria-label="Automatic logout time" data-session-timeout>
+                        <option value="1">1 minute</option>
+                        <option value="5" selected>5 minutes</option>
+                        <option value="15">15 minutes</option>
+                        <option value="30">30 minutes</option>
                     </select>
                 </div>
 
-                <!-- Face ID / Touch ID -->
+                <!-- Platform Authenticator -->
                 <div class="settings-row">
                     <div>
-                        <div class="settings-label"><i class="fas fa-face-smile settings-icon"></i> Face ID / Touch ID</div>
-                        <div class="settings-subtext">Quick unlock with biometrics</div>
+                        <div class="settings-label"><i class="fas fa-fingerprint settings-icon"></i> Platform Authenticator</div>
+                        <div class="settings-subtext" data-passkey-status>Checking passkey status...</div>
                     </div>
-                    <label class="settings-toggle" aria-label="Face ID or touch ID">
-                        <input type="checkbox" checked />
-                        <span class="slider"></span>
-                    </label>
+                    <span class="settings-status" data-passkey-badge>Checking</span>
                 </div>
 
                 <!-- Cache & Storage -->
@@ -676,6 +672,7 @@
     </div>
     <script src="i18n.js"></script>
     <script src="theme.js"></script>
+    <script src="passkeys.js"></script>
     <script>
         fetch('/api/me').then(response => {
             if (!response.ok) throw new Error('Not logged in');

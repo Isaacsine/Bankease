@@ -38,6 +38,8 @@ async function submitAuthForm(form, endpoint, redirectTo) {
             return;
         }
         if (redirectTo) {
+            localStorage.removeItem('bankease.lastActivityAt');
+            localStorage.removeItem('bankease.idleTimeoutMinutes');
             window.location.href = result.user?.role === 'admin' ? 'admin/' : redirectTo;
         }
     } catch (error) {
