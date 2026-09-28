@@ -8,11 +8,12 @@
     <link rel="icon" type="image/png" href="assets/iconLogo.png" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/dashboard.css" />
     <link rel="stylesheet" href="css/responsive.css" />
     <style>
         /* Account-specific styles */
         .account-summary-card {
-            background: linear-gradient(135deg, #1a1a2e, #2d2d44);
+            background: linear-gradient(135deg, #172b3a, #25495a);
             border-radius: 20px;
             padding: 20px;
             color: #fff;
@@ -55,6 +56,15 @@
             font-size: 10px;
             opacity: 0.6;
             letter-spacing: 0.5px;
+        }
+
+        .account-summary-pulse { background: linear-gradient(135deg, #172b3a, #25495a); }
+        .account-summary-pulse .pulse-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+        .account-summary-pulse .pulse-stat-label { text-transform: uppercase; }
+        .account-summary-pulse .pulse-stats strong { font-size: 15px; }
+        .account-summary-total { margin-top: 8px; color: #fff; font-size: 28px; font-weight: 700; line-height: 1.2; overflow-wrap: anywhere; }
+        @media (max-width: 480px) {
+            .account-summary-pulse .pulse-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 14px; }
         }
 
         .account-item-detail {
@@ -345,29 +355,23 @@
         <div class="content-shell">
 
             <!-- Account Summary -->
-            <div class="account-summary-card">
-                <div class="total-label">TOTAL BALANCE</div>
-                <div class="total-amount" id="accountsTotal">R0.00</div>
-                <div class="total-sub" id="accountsTotalSub">Across 0 accounts</div>
-                <div class="quick-stats">
-                    <div class="stat">
-                        <div class="number" id="accountsCount">0</div>
-                        <div class="label">Accounts</div>
+            <section class="money-pulse account-summary-pulse" aria-label="Account summary">
+                <div class="money-pulse-header">
+                    <div>
+                        <span class="pulse-kicker"><i class="fas fa-building-columns"></i> ACCOUNT PULSE</span>
+                        <h3>Total linked balance</h3>
                     </div>
-                    <div class="stat">
-                        <div class="number" id="activeCount">0</div>
-                        <div class="label">Active</div>
-                    </div>
-                    <div class="stat">
-                        <div class="number" id="inactiveCount">0</div>
-                        <div class="label">Paused</div>
-                    </div>
-                    <div class="stat">
-                        <div class="number" id="cardsCount">0</div>
-                        <div class="label">Cards</div>
-                    </div>
+                    <span class="pulse-score" id="accountsCount">0</span>
                 </div>
-            </div>
+                <p class="account-summary-total sensitive-value" id="accountsTotal">R0.00</p>
+                <p class="pulse-insight" id="accountsTotalSub">Across 0 accounts</p>
+                <div class="pulse-stats">
+                    <div><span class="pulse-stat-label">Linked</span><strong id="accountsLinkedCount">0</strong></div>
+                    <div><span class="pulse-stat-label">Active</span><strong id="activeCount">0</strong></div>
+                    <div><span class="pulse-stat-label">Paused</span><strong id="inactiveCount">0</strong></div>
+                    <div><span class="pulse-stat-label">Cards</span><strong id="cardsCount">0</strong></div>
+                </div>
+            </section>
 
             <!-- Quick Actions -->
             <div class="quick-action-row">
@@ -590,6 +594,7 @@
             document.getElementById('accountsTotal').textContent = 'R' + total.toFixed(2);
             document.getElementById('accountsTotalSub').textContent = 'Across ' + allBanks.length + ' accounts';
             document.getElementById('accountsCount').textContent = allBanks.length;
+            document.getElementById('accountsLinkedCount').textContent = allBanks.length;
             document.getElementById('activeCount').textContent = allBanks.filter(isActive).length;
             document.getElementById('inactiveCount').textContent = allBanks.filter(bank => !isActive(bank)).length;
             document.getElementById('cardsCount').textContent = allBanks.filter(bank => bank.account_type === 'credit').length;

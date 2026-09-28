@@ -83,8 +83,9 @@
                         <div id="spendingCategories" class="category-list"><p class="tool-empty">Your categories will appear as you transact.</p></div>
                     </div>
                     <div class="tool-panel planning-panel">
-                        <div class="tool-panel-heading"><div><span class="tool-kicker">GOALS</span><h3>Savings goals</h3></div></div>
+                        <div class="tool-panel-heading"><div><span class="tool-kicker">GOALS</span><h3>Savings goals</h3></div><a class="tool-meta" href="#goalForm">Manage</a></div>
                         <form id="goalForm" class="inline-tool-form"><input id="goalName" type="text" placeholder="Goal name" aria-label="Savings goal name" maxlength="40" required><input id="goalTarget" type="number" min="1" step="0.01" placeholder="Target R" aria-label="Savings goal target" required><button type="submit" aria-label="Add savings goal" title="Add savings goal"><i class="fas fa-plus"></i></button></form>
+                        <p id="goalFormMessage" class="tool-empty" role="status"></p>
                         <div id="goalList" class="planning-list"><p class="tool-empty">Add a goal to give your money a direction.</p></div>
                     </div>
                     <div class="tool-panel planning-panel">

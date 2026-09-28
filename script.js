@@ -7,6 +7,7 @@
     let banks = [];
     let selectedId = null;
     let defaultBankId = null;
+    let savingsGoals = [];
     let transactions = [
         { title: 'ATM Withdrawal', bank: 'FNB *****', amount: -1000, time: 'Today, 10:45 AM', icon: 'fa-money-bill-wave' },
         { title: 'POS Purchase', bank: 'Capitec *****', amount: -250, time: 'Yesterday, 4:30 PM', icon: 'fa-shopping-cart' },
@@ -53,6 +54,28 @@
             time: new Date(transaction.created_at).toLocaleString(),
             icon: transaction.title.toLowerCase().includes('transfer') ? 'fa-exchange-alt' : 'fa-receipt'
         }));
+        const goalsResponse = await fetch('/api/savings-goals');
+        if (goalsResponse.ok) {
+            const goalsResult = await goalsResponse.json();
+            savingsGoals = goalsResult.goals || [];
+            const legacyGoals = readStoredList(storageKeys.goals);
+            let importedAll = true;
+            for (const legacyGoal of legacyGoals) {
+                const targetAmount = Number(legacyGoal.target || legacyGoal.target_amount);
+                const alreadyExists = savingsGoals.some(goal => goal.name === legacyGoal.name && Number(goal.target_amount) === targetAmount);
+                if (alreadyExists) continue;
+                const response = await fetch('/api/savings-goals', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: legacyGoal.name, target: targetAmount })
+                });
+                if (!response.ok) { importedAll = false; continue; }
+                savingsGoals.unshift((await response.json()).goal);
+            }
+            if (importedAll) localStorage.removeItem(storageKeys.goals);
+        } else {
+            savingsGoals = readStoredList(storageKeys.goals);
+        }
         selectedId = banks.some(bank => bank.id === defaultBankId && bank.is_active) ? defaultBankId : banks.find(bank => bank.is_active)?.id || banks[0]?.id || null;
         renderAll();
         populateDefaultBankSelect();
@@ -162,6 +185,7 @@
 
     function spendingCategory(title) {
         const normalized = title.toLowerCase();
+        if (/savings goal contribution/.test(normalized)) return 'Savings';
         if (/airtime|data|vodacom|mtn|telkom|cell c/.test(normalized)) return 'Mobile';
         if (/transfer/.test(normalized)) return 'Transfers';
         if (/salary|payroll|income|deposit/.test(normalized)) return 'Income';
@@ -181,7 +205,7 @@
 
         const now = new Date();
         const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
-        const monthlySpending = transactions.filter(transaction => transaction.amount < 0 && transactionDate(transaction)?.getTime() >= monthStart);
+        const monthlySpending = transactions.filter(transaction => transaction.amount < 0 && !/savings goal contribution/i.test(transaction.title) && transactionDate(transaction)?.getTime() >= monthStart);
         const categories = monthlySpending.reduce((result, transaction) => {
             const name = spendingCategory(transaction.title);
             result[name] = (result[name] || 0) + Math.abs(transaction.amount);
@@ -208,8 +232,16 @@
     function renderGoals() {
         const goalList = document.getElementById('goalList');
         if (!goalList) return;
-        const goals = readStoredList(storageKeys.goals);
-        goalList.innerHTML = goals.length ? goals.map(goal => `<div class="planning-item"><div class="planning-item-details"><span class="planning-item-name">${escapeHtml(goal.name)}</span><span class="planning-item-sub">Target ${formatCurrency(Number(goal.target))}</span></div><span class="planning-item-amount">0%</span><button class="planning-remove" type="button" data-remove-goal="${escapeHtml(goal.id)}" aria-label="Remove ${escapeHtml(goal.name)}" title="Remove goal"><i class="fas fa-xmark"></i></button></div>`).join('') : '<p class="tool-empty">Add a goal to give your money a direction.</p>';
+        goalList.innerHTML = savingsGoals.length ? savingsGoals.map(goal => {
+            const target = Number(goal.target_amount ?? goal.target) || 0;
+            const saved = Number(goal.saved_amount) || 0;
+            const progress = target > 0 ? Math.min(100, Math.round(saved / target * 100)) : 0;
+            const goalName = escapeHtml(goal.name);
+            const goalLink = goal.id ? `<a class="planning-item-name" href="savings-goal.html?id=${encodeURIComponent(goal.id)}">${goalName}</a>` : `<span class="planning-item-name">${goalName}</span>`;
+            const isLegacyGoal = !goal.created_at;
+            const removeButton = goal.id && saved > 0 ? '' : `<button class="planning-remove" type="button" data-remove-goal="${escapeHtml(goal.id || '')}" data-local-goal="${isLegacyGoal}" aria-label="Remove ${goalName}" title="Remove goal"><i class="fas fa-xmark"></i></button>`;
+            return `<div class="planning-item goal-planning-item"><div class="planning-item-details">${goalLink}<span class="planning-item-sub">${formatCurrency(saved)} of ${formatCurrency(target)}</span><span class="goal-progress"><span style="width:${progress}%"></span></span></div><span class="planning-item-amount">${progress}%</span>${removeButton}</div>`;
+        }).join('') : '<p class="tool-empty">Add a goal to give your money a direction.</p>';
     }
 
     function renderReminders() {
@@ -233,7 +265,7 @@
             return date && date.getTime() >= cutoff;
         });
         const income = recent.filter(transaction => transaction.amount > 0).reduce((sum, transaction) => sum + transaction.amount, 0);
-        const spending = recent.filter(transaction => transaction.amount < 0).reduce((sum, transaction) => sum + Math.abs(transaction.amount), 0);
+        const spending = recent.filter(transaction => transaction.amount < 0 && !/savings goal contribution/i.test(transaction.title)).reduce((sum, transaction) => sum + Math.abs(transaction.amount), 0);
         const totalBalance = banks.reduce((sum, bank) => sum + Number(bank.balance || 0), 0);
         const bufferRatio = spending > 0 ? totalBalance / spending : totalBalance > 0 ? 3 : 0;
         const score = totalBalance === 0 && spending === 0 ? 0 : Math.max(20, Math.min(99, Math.round(45 + (bufferRatio * 15))));
@@ -809,13 +841,27 @@
     if (dropTransferCancel) dropTransferCancel.addEventListener('click', clearDropTransfer);
 
     if (goalForm) {
-        goalForm.addEventListener('submit', event => {
+        goalForm.addEventListener('submit', async event => {
             event.preventDefault();
-            const goals = readStoredList(storageKeys.goals);
-            goals.push({ id: createLocalId(), name: document.getElementById('goalName').value.trim(), target: Number(document.getElementById('goalTarget').value) });
-            writeStoredList(storageKeys.goals, goals);
-            goalForm.reset();
-            renderFinancialTools();
+            const submitButton = goalForm.querySelector('button[type="submit"]');
+            const message = document.getElementById('goalFormMessage');
+            submitButton.disabled = true;
+            if (message) message.textContent = 'Saving goal...';
+            try {
+                const response = await fetch('/api/savings-goals', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: document.getElementById('goalName').value.trim(), target: Number(document.getElementById('goalTarget').value) })
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.error || 'Could not save savings goal.');
+                savingsGoals.unshift(result.goal);
+                goalForm.reset();
+                if (message) message.textContent = 'Goal saved. Add money to start its progress.';
+                renderGoals();
+            } catch (error) {
+                if (message) message.textContent = error.message;
+            } finally { submitButton.disabled = false; }
         });
     }
 
@@ -830,12 +876,24 @@
         });
     }
 
-    document.addEventListener('click', event => {
+    document.addEventListener('click', async event => {
         const goalButton = event.target.closest('[data-remove-goal]');
         const reminderButton = event.target.closest('[data-remove-reminder]');
         if (goalButton) {
-            writeStoredList(storageKeys.goals, readStoredList(storageKeys.goals).filter(goal => goal.id !== goalButton.dataset.removeGoal));
-            renderFinancialTools();
+            if (goalButton.dataset.localGoal !== 'true') {
+                const response = await fetch('/api/savings-goals/' + encodeURIComponent(goalButton.dataset.removeGoal), { method: 'DELETE' });
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                    const message = document.getElementById('goalFormMessage');
+                    if (message) message.textContent = result.error || 'Could not remove savings goal.';
+                    return;
+                }
+                savingsGoals = savingsGoals.filter(goal => goal.id !== goalButton.dataset.removeGoal);
+            } else {
+                writeStoredList(storageKeys.goals, readStoredList(storageKeys.goals).filter(goal => goal.id !== goalButton.dataset.removeGoal));
+                savingsGoals = savingsGoals.filter(goal => goal.id !== goalButton.dataset.removeGoal);
+            }
+            renderGoals();
         }
         if (reminderButton) {
             writeStoredList(storageKeys.reminders, readStoredList(storageKeys.reminders).filter(reminder => reminder.id !== reminderButton.dataset.removeReminder));

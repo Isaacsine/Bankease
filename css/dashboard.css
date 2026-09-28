@@ -444,6 +444,12 @@
     font-size: 10px;
 }
 
+.goal-planning-item .planning-item-details { min-width: 0; flex: 1; }
+.goal-planning-item .planning-item-name { color: #1a1a2e; text-decoration: none; }
+.goal-planning-item .planning-item-name:hover { text-decoration: underline; }
+.goal-progress { display: block; height: 5px; margin-top: 7px; overflow: hidden; border-radius: 4px; background: #e8ecef; }
+.goal-progress span { display: block; height: 100%; border-radius: inherit; background: #279b78; transition: width .25s ease; }
+
 .planning-remove {
     width: 26px;
     height: 26px;

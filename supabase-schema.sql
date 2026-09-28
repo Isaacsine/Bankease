@@ -100,12 +100,24 @@ create table if not exists public.beneficiaries (
 
 alter table public.beneficiaries enable row level security;
 
+create table if not exists public.savings_goals (
+    id uuid primary key default gen_random_uuid(),
+    user_id uuid not null references public.users(id) on delete cascade,
+    name text not null check (length(trim(name)) between 1 and 80),
+    target_amount numeric(12, 2) not null check (target_amount > 0),
+    saved_amount numeric(12, 2) not null default 0 check (saved_amount >= 0 and saved_amount <= target_amount),
+    created_at timestamptz not null default now()
+);
+
+alter table public.savings_goals enable row level security;
+
 create table if not exists public.transactions (
     id uuid primary key default gen_random_uuid(),
     user_id uuid not null references public.users(id) on delete cascade,
     from_bank_id uuid references public.banks(id) on delete set null,
     to_bank_id uuid references public.banks(id) on delete set null,
     beneficiary_id uuid references public.beneficiaries(id) on delete set null,
+    goal_id uuid references public.savings_goals(id) on delete set null,
     recipient_name text,
     memo text,
     title text not null,
@@ -115,6 +127,7 @@ create table if not exists public.transactions (
 );
 
 alter table public.transactions add column if not exists beneficiary_id uuid references public.beneficiaries(id) on delete set null;
+alter table public.transactions add column if not exists goal_id uuid references public.savings_goals(id) on delete set null;
 alter table public.transactions add column if not exists recipient_name text;
 alter table public.transactions add column if not exists memo text;
 alter table public.transactions drop constraint if exists transactions_from_bank_id_fkey;
@@ -128,6 +141,8 @@ alter table public.transactions enable row level security;
 create index if not exists banks_user_id_idx on public.banks(user_id);
 create index if not exists transactions_user_id_idx on public.transactions(user_id);
 create index if not exists beneficiaries_user_id_idx on public.beneficiaries(user_id);
+create index if not exists savings_goals_user_id_idx on public.savings_goals(user_id);
+create index if not exists transactions_goal_id_idx on public.transactions(goal_id);
 create index if not exists password_reset_tokens_user_id_idx on public.password_reset_tokens(user_id);
 create index if not exists password_reset_tokens_expires_at_idx on public.password_reset_tokens(expires_at);
 create unique index if not exists users_email_lower_idx on public.users(lower(email));
@@ -310,6 +325,89 @@ begin
 end;
 $$;
 
+create or replace function public.contribute_to_savings_goal(
+    p_user_id uuid,
+    p_bank_id uuid,
+    p_goal_id uuid,
+    p_amount numeric,
+    p_note text default null
+)
+returns json
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+    source_bank public.banks;
+    goal public.savings_goals;
+    transaction_id uuid;
+    contribution_note text := nullif(trim(p_note), '');
+begin
+    if p_amount is null or p_amount <= 0 then
+        raise exception 'Contribution must be greater than zero.' using errcode = '22023';
+    end if;
+    if length(coalesce(contribution_note, '')) > 240 then
+        raise exception 'Contribution note must be 240 characters or fewer.' using errcode = '22023';
+    end if;
+
+    select * into goal from public.savings_goals
+    where id = p_goal_id and user_id = p_user_id for update;
+    select * into source_bank from public.banks
+    where id = p_bank_id and user_id = p_user_id for update;
+
+    if goal.id is null or source_bank.id is null then
+        raise exception 'Savings goal or source account was not found.' using errcode = 'P0002';
+    end if;
+    if not source_bank.is_active then
+        raise exception 'Paused accounts cannot fund savings goals.' using errcode = '55000';
+    end if;
+    if source_bank.balance < p_amount then
+        raise exception 'Insufficient balance.' using errcode = '22003';
+    end if;
+    if goal.saved_amount + p_amount > goal.target_amount then
+        raise exception 'Contribution exceeds the remaining goal amount.' using errcode = '22023';
+    end if;
+
+    update public.banks set balance = balance - p_amount where id = source_bank.id;
+    update public.savings_goals set saved_amount = saved_amount + p_amount where id = goal.id;
+    insert into public.transactions(user_id, from_bank_id, goal_id, memo, title, amount)
+    values (p_user_id, source_bank.id, goal.id, contribution_note, 'Savings goal contribution - ' || goal.name, -p_amount)
+    returning id into transaction_id;
+
+    insert into public.audit_logs(actor_user_id, action, metadata)
+    values (p_user_id, 'savings_goal_contribution', jsonb_build_object('transactionId', transaction_id, 'bankId', source_bank.id, 'goalId', goal.id, 'goalName', goal.name, 'amount', p_amount));
+
+    return json_build_object('goalId', goal.id, 'goalName', goal.name, 'savedAmount', goal.saved_amount + p_amount, 'targetAmount', goal.target_amount, 'amount', p_amount, 'status', 'completed');
+end;
+$$;
+
+create or replace function public.delete_empty_savings_goal(
+    p_user_id uuid,
+    p_goal_id uuid
+)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+    goal public.savings_goals;
+begin
+    select * into goal from public.savings_goals
+    where id = p_goal_id and user_id = p_user_id for update;
+    if goal.id is null then
+        raise exception 'Savings goal was not found.' using errcode = 'P0002';
+    end if;
+    if goal.saved_amount > 0 then
+        raise exception 'A funded goal cannot be removed.' using errcode = '55000';
+    end if;
+
+    delete from public.savings_goals where id = goal.id;
+    insert into public.audit_logs(actor_user_id, action, metadata)
+    values (p_user_id, 'savings_goal_removed', jsonb_build_object('goalId', goal.id, 'goalName', goal.name));
+end;
+$$;
+
 create or replace function public.purchase_airtime(
     p_user_id uuid,
     p_bank_id uuid,
@@ -358,14 +456,18 @@ begin
 end;
 $$;
 
-revoke all on table public.users, public.banks, public.beneficiaries, public.transactions, public.user_sessions, public.passkeys, public.audit_logs, public.password_reset_tokens from anon, authenticated;
+revoke all on table public.users, public.banks, public.beneficiaries, public.savings_goals, public.transactions, public.user_sessions, public.passkeys, public.audit_logs, public.password_reset_tokens from anon, authenticated;
 revoke execute on function public.transfer_between_banks(uuid, uuid, uuid, numeric) from public, anon, authenticated;
 revoke execute on function public.transfer_to_beneficiary(uuid, uuid, uuid, numeric, text) from public, anon, authenticated;
 revoke execute on function public.set_bank_active_state(uuid, uuid, boolean) from public, anon, authenticated;
 revoke execute on function public.set_default_bank(uuid, uuid) from public, anon, authenticated;
+revoke execute on function public.contribute_to_savings_goal(uuid, uuid, uuid, numeric, text) from public, anon, authenticated;
+revoke execute on function public.delete_empty_savings_goal(uuid, uuid) from public, anon, authenticated;
 revoke execute on function public.purchase_airtime(uuid, uuid, text, text, numeric) from public, anon, authenticated;
 grant execute on function public.transfer_between_banks(uuid, uuid, uuid, numeric) to service_role;
 grant execute on function public.transfer_to_beneficiary(uuid, uuid, uuid, numeric, text) to service_role;
 grant execute on function public.set_bank_active_state(uuid, uuid, boolean) to service_role;
 grant execute on function public.set_default_bank(uuid, uuid) to service_role;
+grant execute on function public.contribute_to_savings_goal(uuid, uuid, uuid, numeric, text) to service_role;
+grant execute on function public.delete_empty_savings_goal(uuid, uuid) to service_role;
 grant execute on function public.purchase_airtime(uuid, uuid, text, text, numeric) to service_role;

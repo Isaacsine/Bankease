@@ -93,7 +93,7 @@
             }
             const result = await response.json();
             transactionList.innerHTML = result.transactions.length ? result.transactions.map(transaction => {
-                const kind = transaction.amount > 0 ? 'income' : transaction.title.toLowerCase().includes('transfer') ? 'transfer' : 'expense';
+                const kind = transaction.amount > 0 ? 'income' : transaction.goal_id || transaction.title.toLowerCase().includes('transfer') ? 'transfer' : 'expense';
                 const amount = Number(transaction.amount);
                 return `<div class="transaction-item" data-kind="${kind}">
                     <div><div class="transaction-name">${escapeHtml(transaction.title)}</div><div class="transaction-date">${new Date(transaction.created_at).toLocaleString()}</div>${transaction.memo ? `<div class="transaction-date">${escapeHtml(transaction.memo)}</div>` : ''}</div>

@@ -616,7 +616,7 @@
 
         function renderAnalytics() {
             const periodTransactions = currentTransactions();
-            const expenses = periodTransactions.filter(transaction => Number(transaction.amount) < 0);
+            const expenses = periodTransactions.filter(transaction => Number(transaction.amount) < 0 && !transaction.goal_id);
             const income = periodTransactions.filter(transaction => Number(transaction.amount) > 0);
             const spent = expenses.reduce((total, transaction) => total + Math.abs(Number(transaction.amount)), 0);
             const earned = income.reduce((total, transaction) => total + Number(transaction.amount), 0);
@@ -636,7 +636,7 @@
             for (let date = chartStart; date <= chartEnd; date.setMonth(date.getMonth() + 1)) {
                 const monthStart = new Date(date.getFullYear(), date.getMonth(), 1);
                 const monthEnd = new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59, 999);
-                chartMonths.push({ date: new Date(date), amount: periodTransactions.filter(transaction => { const transactionDate = new Date(transaction.created_at); return transactionDate >= monthStart && transactionDate <= monthEnd && Number(transaction.amount) < 0; }).reduce((total, transaction) => total + Math.abs(Number(transaction.amount)), 0) });
+                chartMonths.push({ date: new Date(date), amount: periodTransactions.filter(transaction => { const transactionDate = new Date(transaction.created_at); return transactionDate >= monthStart && transactionDate <= monthEnd && Number(transaction.amount) < 0 && !transaction.goal_id; }).reduce((total, transaction) => total + Math.abs(Number(transaction.amount)), 0) });
             }
             const maxMonth = Math.max(...chartMonths.map(item => item.amount), 1);
             document.getElementById('monthlyChart').innerHTML = chartMonths.map(item => '<div class="monthly-bar"><div class="value">' + (item.amount ? money(item.amount) : 'R0.00') + '</div><div class="bar" style="height:' + Math.max(4, Math.round(item.amount / maxMonth * 106)) + 'px;background:' + (item.amount === maxMonth ? '#e67e22' : '#1a1a2e') + '"></div><div class="label">' + item.date.toLocaleString('en', { month: 'short' }) + '</div></div>').join('');

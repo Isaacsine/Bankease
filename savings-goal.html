@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bankease - Savings goal</title>
+    <link rel="icon" type="image/png" href="assets/iconLogo.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <style>
+        .app { max-width: 100%; }
+        .goal-page { max-width: 920px; margin: 0 auto; padding: 20px 16px 104px; }
+        .goal-pulse { margin-bottom: 22px; }
+        .goal-pulse h3 { max-width: 680px; overflow-wrap: anywhere; }
+        .goal-progress-track { height: 10px; margin: 16px 0 4px; overflow: hidden; border-radius: 8px; background: rgba(255,255,255,.18); }
+        .goal-progress-track span { display: block; height: 100%; border-radius: inherit; background: #a7d8c8; transition: width .3s ease; }
+        .goal-summary-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 18px 0 24px; }
+        .goal-summary-stats > div { padding: 12px; border-top: 2px solid #dce5e7; }
+        .goal-summary-stats span { display: block; color: #737d86; font-size: 11px; text-transform: uppercase; }
+        .goal-summary-stats strong { display: block; margin-top: 5px; font-size: 16px; }
+        .goal-content { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(270px, .9fr); gap: 26px; align-items: start; }
+        .goal-section { min-width: 0; padding: 18px 0; border-top: 2px solid #26333d; }
+        .goal-section h3 { margin-bottom: 14px; font-size: 16px; }
+        .goal-transfer-form label { display: block; margin: 12px 0 6px; font-size: 13px; font-weight: 600; }
+        .goal-transfer-form input, .goal-transfer-form select { width: 100%; min-height: 42px; padding: 9px 11px; border: 1px solid #cbd2d8; border-radius: 5px; background: #fff; font: inherit; }
+        .goal-transfer-form button { margin-top: 16px; }
+        .goal-disclosure { margin-top: 12px; color: #737d86; font-size: 12px; line-height: 1.5; }
+        .goal-contributions { display: grid; }
+        .goal-contribution { display: flex; justify-content: space-between; gap: 14px; padding: 12px 0; border-bottom: 1px solid #edf0f2; }
+        .goal-contribution:last-child { border-bottom: 0; }
+        .goal-contribution strong { display: block; font-size: 14px; }
+        .goal-contribution small { display: block; margin-top: 4px; color: #737d86; font-size: 12px; }
+        .goal-contribution .amount { flex-shrink: 0; color: #147d5a; font-weight: 700; }
+        .goal-empty { padding: 12px 0; color: #737d86; font-size: 14px; }
+        .goal-back { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 16px; color: #26333d; font-size: 13px; font-weight: 600; text-decoration: none; }
+        .goal-back:hover { color: #147d5a; }
+        @media (max-width: 680px) {
+            .goal-content { grid-template-columns: 1fr; gap: 8px; }
+            .goal-summary-stats { grid-template-columns: 1fr 1fr; }
+            .goal-summary-stats > div:last-child { grid-column: 1 / -1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <div class="header">
+            <a class="logo-wrapper" href="dashboard.html" aria-label="Go to dashboard"><img class="logo-icon" src="assets/bankeaseLogo.png" alt="Bankease icon"><div><div class="logo-text">BANKE<span class="highlight">ASE</span></div><div class="logo-tagline">ONE CARD. ALL BANKS.</div></div></a>
+            <div class="header-actions"><a href="dashboard.html" aria-label="Back to dashboard"><i class="fas fa-arrow-left"></i></a></div>
+        </div>
+        <div class="page-title-block"><h2>Savings goal</h2><p>Track your progress and add money from an active account</p></div>
+        <main class="goal-page">
+            <a class="goal-back" href="dashboard.html"><i class="fas fa-arrow-left"></i> All savings goals</a>
+            <section class="money-pulse goal-pulse" aria-labelledby="goalName">
+                <div class="money-pulse-header">
+                    <div><span class="pulse-kicker"><i class="fas fa-bullseye"></i> SAVINGS GOAL</span><h3 id="goalName">Loading goal...</h3></div>
+                    <span class="pulse-score" id="goalPercentage">0%</span>
+                </div>
+                <p class="pulse-insight" id="goalStatus">Loading progress...</p>
+                <div class="goal-progress-track" role="progressbar" aria-label="Goal progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="goalProgressTrack"><span id="goalProgressBar"></span></div>
+            </section>
+            <div class="goal-summary-stats">
+                <div><span>Saved</span><strong id="goalSaved">R0.00</strong></div>
+                <div><span>Target</span><strong id="goalTarget">R0.00</strong></div>
+                <div><span>Remaining</span><strong id="goalRemaining">R0.00</strong></div>
+            </div>
+            <div class="goal-content">
+                <section class="goal-section" aria-labelledby="contributionHeading">
+                    <h3 id="contributionHeading">Add money to this goal</h3>
+                    <form class="goal-transfer-form" id="contributionForm">
+                        <label for="sourceBank">From account</label>
+                        <select id="sourceBank" required></select>
+                        <label for="contributionAmount">Amount (R)</label>
+                        <input id="contributionAmount" type="number" min="0.01" step="0.01" required>
+                        <label for="contributionNote">Note <span>(optional)</span></label>
+                        <input id="contributionNote" maxlength="240" placeholder="e.g. Monthly savings">
+                        <button class="btn-primary full-width-btn" type="submit"><i class="fas fa-arrow-right-arrow-left"></i> Add to goal</button>
+                        <p class="form-message" id="contributionMessage" role="status"></p>
+                    </form>
+                    <p class="goal-disclosure">The contribution is moved out of the selected linked-account balance and recorded toward this goal in Bankease.</p>
+                </section>
+                <section class="goal-section" aria-labelledby="contributionHistoryHeading">
+                    <h3 id="contributionHistoryHeading">Contribution history</h3>
+                    <div class="goal-contributions" id="contributionList" aria-live="polite"><p class="goal-empty">Loading contributions...</p></div>
+                </section>
+            </div>
+        </main>
+        <div class="bottom-nav">
+            <button class="nav-item" onclick="location.href='dashboard.html'"><i class="fas fa-th"></i> Dashboard</button>
+            <button class="nav-item" onclick="location.href='accounts.html'"><i class="fas fa-wallet"></i> Accounts</button>
+            <button class="nav-item" onclick="location.href='transfer.html'"><i class="fas fa-exchange-alt"></i> Transfer</button>
+            <button class="nav-item active" onclick="location.href='dashboard.html#goals'"><i class="fas fa-bullseye"></i> Goals</button>
+        </div>
+    </div>
+    <script src="i18n.js"></script>
+    <script src="theme.js"></script>
+    <script>
+        const goalId = new URLSearchParams(window.location.search).get('id');
+        const contributionForm = document.getElementById('contributionForm');
+        const contributionMessage = document.getElementById('contributionMessage');
+        const contributionList = document.getElementById('contributionList');
+        const sourceBank = document.getElementById('sourceBank');
+        const money = value => 'R' + Number(value || 0).toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
+        let activeGoal;
+        let banks = [];
+
+        function showMessage(text, type) {
+            contributionMessage.textContent = text;
+            contributionMessage.className = 'form-message ' + (type || '');
+        }
+
+        function renderGoal(goal, contributions) {
+            activeGoal = goal;
+            const target = Number(goal.target_amount);
+            const saved = Number(goal.saved_amount);
+            const remaining = Math.max(0, target - saved);
+            const percentage = target > 0 ? Math.min(100, Math.round(saved / target * 100)) : 0;
+            document.title = 'Bankease - ' + goal.name;
+            document.getElementById('goalName').textContent = goal.name;
+            document.getElementById('goalPercentage').textContent = percentage + '%';
+            document.getElementById('goalStatus').textContent = percentage >= 100 ? 'Goal reached.' : `${percentage}% complete. ${money(remaining)} left to reach your target.`;
+            document.getElementById('goalSaved').textContent = money(saved);
+            document.getElementById('goalTarget').textContent = money(target);
+            document.getElementById('goalRemaining').textContent = money(remaining);
+            document.getElementById('goalProgressBar').style.width = percentage + '%';
+            document.getElementById('goalProgressTrack').setAttribute('aria-valuenow', String(percentage));
+            document.getElementById('contributionAmount').max = String(remaining);
+            const sourceOptions = banks.filter(bank => bank.is_active !== false).map(bank => `<option value="${escapeHtml(bank.id)}">${escapeHtml(bank.custom_name || bank.name)} (available ${money(bank.balance)})</option>`).join('');
+            sourceBank.innerHTML = sourceOptions || '<option value="">No active accounts</option>';
+            sourceBank.disabled = !sourceOptions || remaining <= 0;
+            contributionForm.querySelector('button[type="submit"]').disabled = !sourceOptions || remaining <= 0;
+            contributionList.innerHTML = contributions.length ? contributions.map(contribution => {
+                const bank = banks.find(item => item.id === contribution.from_bank_id);
+                return `<article class="goal-contribution"><div><strong>${escapeHtml(bank?.custom_name || bank?.name || 'Linked account')}</strong><small>${new Date(contribution.created_at).toLocaleString()}${contribution.memo ? ' | ' + escapeHtml(contribution.memo) : ''}</small></div><span class="amount">${money(Math.abs(Number(contribution.amount)))}</span></article>`;
+            }).join('') : '<p class="goal-empty">No contributions yet.</p>';
+        }
+
+        async function loadGoal() {
+            if (!goalId) { window.location.href = 'dashboard.html'; return; }
+            const [goalResponse, banksResponse] = await Promise.all([
+                fetch('/api/savings-goals/' + encodeURIComponent(goalId), { credentials: 'same-origin' }),
+                fetch('/api/banks', { credentials: 'same-origin' })
+            ]);
+            if (goalResponse.status === 401 || banksResponse.status === 401) { window.location.href = 'login.html'; return; }
+            const goalResult = await goalResponse.json();
+            const banksResult = await banksResponse.json();
+            if (!goalResponse.ok) throw new Error(goalResult.error || 'Could not load this savings goal.');
+            if (!banksResponse.ok) throw new Error(banksResult.error || 'Could not load linked accounts.');
+            banks = banksResult.banks;
+            renderGoal(goalResult.goal, goalResult.contributions);
+            if (banksResult.defaultBankId && banks.some(bank => bank.id === banksResult.defaultBankId && bank.is_active !== false)) sourceBank.value = banksResult.defaultBankId;
+        }
+
+        contributionForm.addEventListener('submit', async event => {
+            event.preventDefault();
+            const button = contributionForm.querySelector('button[type="submit"]');
+            button.disabled = true;
+            showMessage('Moving money to your goal...', '');
+            try {
+                const response = await fetch('/api/savings-goals/' + encodeURIComponent(goalId) + '/contributions', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ bankId: sourceBank.value, amount: Number(document.getElementById('contributionAmount').value), note: document.getElementById('contributionNote').value })
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.error || 'Could not add money to this goal.');
+                contributionForm.reset();
+                showMessage('Contribution added.', 'success');
+                await loadGoal();
+            } catch (error) { showMessage(error.message, 'error'); }
+            finally { button.disabled = !activeGoal || Number(activeGoal.saved_amount) >= Number(activeGoal.target_amount) || !banks.some(bank => bank.is_active !== false); }
+        });
+
+        loadGoal().catch(error => showMessage(error.message, 'error'));
+    </script>
+</body>
+</html>

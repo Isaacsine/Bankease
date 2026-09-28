@@ -645,6 +645,79 @@ app.delete('/api/beneficiaries/:id', async (request, response, next) => {
     } catch (error) { return next(error); }
 });
 
+app.get('/api/savings-goals', async (request, response, next) => {
+    try {
+        if (!requireUser(request, response)) return;
+        const { data: goals, error } = await supabase.from('savings_goals').select('id,name,target_amount,saved_amount,created_at').eq('user_id', request.session.userId).order('created_at', { ascending: false });
+        if (error) throw error;
+        return response.json({ goals });
+    } catch (error) { return next(error); }
+});
+
+app.post('/api/savings-goals', async (request, response, next) => {
+    try {
+        if (!requireUser(request, response)) return;
+        const { name, target } = request.body || {};
+        const targetAmount = Number(target);
+        if (typeof name !== 'string' || !name.trim() || name.trim().length > 80) return response.status(400).json({ error: 'Enter a goal name (up to 80 characters).' });
+        if (!Number.isFinite(targetAmount) || targetAmount <= 0 || targetAmount > 9999999999.99) return response.status(422).json({ error: 'Enter a valid goal target greater than zero.' });
+        const roundedTarget = Math.round(targetAmount * 100) / 100;
+        if (roundedTarget <= 0) return response.status(422).json({ error: 'Goal target must be at least R0.01.' });
+        const { data: goal, error } = await supabase.from('savings_goals').insert({ user_id: request.session.userId, name: name.trim(), target_amount: roundedTarget }).select('id,name,target_amount,saved_amount,created_at').single();
+        if (error) throw error;
+        await recordAudit(request.session.userId, 'savings_goal_created', null, { goalId: goal.id, goalName: goal.name, targetAmount: goal.target_amount });
+        return response.status(201).json({ goal });
+    } catch (error) { return next(error); }
+});
+
+app.get('/api/savings-goals/:id', async (request, response, next) => {
+    try {
+        if (!requireUser(request, response)) return;
+        const { data: goal, error } = await supabase.from('savings_goals').select('id,name,target_amount,saved_amount,created_at').eq('id', request.params.id).eq('user_id', request.session.userId).maybeSingle();
+        if (error) throw error;
+        if (!goal) return response.status(404).json({ error: 'Savings goal was not found.' });
+        const { data: contributions, error: contributionError } = await supabase.from('transactions').select('id,from_bank_id,title,amount,memo,status,created_at').eq('user_id', request.session.userId).eq('goal_id', goal.id).order('created_at', { ascending: false });
+        if (contributionError) throw contributionError;
+        return response.json({ goal, contributions });
+    } catch (error) { return next(error); }
+});
+
+app.delete('/api/savings-goals/:id', async (request, response, next) => {
+    try {
+        if (!requireUser(request, response)) return;
+        const { error } = await supabase.rpc('delete_empty_savings_goal', { p_user_id: request.session.userId, p_goal_id: request.params.id });
+        if (error) {
+            const status = error.code === 'P0002' ? 404 : error.code === '55000' ? 409 : 400;
+            return response.status(status).json({ error: error.message });
+        }
+        return response.status(204).end();
+    } catch (error) { return next(error); }
+});
+
+app.post('/api/savings-goals/:id/contributions', async (request, response, next) => {
+    try {
+        if (!requireUser(request, response)) return;
+        const { bankId, amount, note } = request.body || {};
+        const value = Number(amount);
+        if (!bankId) return response.status(400).json({ error: 'Choose an active source account.' });
+        if (!Number.isFinite(value) || value <= 0 || value > 9999999999.99) return response.status(422).json({ error: 'Contribution must be a valid amount greater than zero.' });
+        if (Math.round(value * 100) / 100 <= 0) return response.status(422).json({ error: 'Contribution must be at least R0.01.' });
+        if (note !== undefined && (typeof note !== 'string' || note.trim().length > 240)) return response.status(400).json({ error: 'Contribution note must be 240 characters or fewer.' });
+        const { data: contribution, error } = await supabase.rpc('contribute_to_savings_goal', {
+            p_user_id: request.session.userId,
+            p_bank_id: bankId,
+            p_goal_id: request.params.id,
+            p_amount: Math.round(value * 100) / 100,
+            p_note: typeof note === 'string' ? note.trim() : null
+        });
+        if (error) {
+            const status = ['22003', '55000'].includes(error.code) ? 409 : error.code === 'P0002' ? 404 : 400;
+            return response.status(status).json({ error: error.message });
+        }
+        return response.status(201).json({ contribution });
+    } catch (error) { return next(error); }
+});
+
 app.post('/api/transfers', async (request, response, next) => {
     try {
         if (!requireUser(request, response)) return;
