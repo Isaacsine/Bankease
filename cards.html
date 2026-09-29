@@ -951,6 +951,7 @@
 
     <script src="i18n.js"></script>
     <script src="theme.js"></script>
+    <script src="currency.js"></script>
     <script>
         // ===== 3D CARD INTERACTION =====
         (function () {
@@ -1162,7 +1163,7 @@
 
         })();
 
-        const cardMoney = value => 'R' + Number(value || 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        const cardMoney = value => window.BankeaseCurrency.format(Number(value || 0));
         const cardLogos = {
             'FNB': 'assets/fnblogo.png',
             'Capitec': 'assets/capitec.jpg',
@@ -1184,6 +1185,10 @@
             document.getElementById('cardLimit').textContent = banks.length;
             document.getElementById('cardUsed').textContent = cardMoney(used);
             document.getElementById('cardAvailable').textContent = cardMoney(combinedBalance);
+            window.addEventListener('bankease:ratesupdated', () => {
+                document.getElementById('cardUsed').textContent = cardMoney(used);
+                document.getElementById('cardAvailable').textContent = cardMoney(combinedBalance);
+            });
             const status = document.getElementById('smartcardStatus');
             status.className = 'card-status-badge ' + (banks.length ? 'active' : 'inactive');
             status.innerHTML = '<i class="fas fa-circle card-status-dot"></i> ' + (banks.length ? 'Active' : 'Inactive');

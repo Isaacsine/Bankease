@@ -95,16 +95,18 @@
     </div>
     <script src="i18n.js"></script>
     <script src="theme.js"></script>
+    <script src="currency.js"></script>
     <script>
         const goalId = new URLSearchParams(window.location.search).get('id');
         const contributionForm = document.getElementById('contributionForm');
         const contributionMessage = document.getElementById('contributionMessage');
         const contributionList = document.getElementById('contributionList');
         const sourceBank = document.getElementById('sourceBank');
-        const money = value => 'R' + Number(value || 0).toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const money = value => window.BankeaseCurrency.format(Number(value || 0));
         const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
         let activeGoal;
         let banks = [];
+        let activeContributions = [];
 
         function showMessage(text, type) {
             contributionMessage.textContent = text;
@@ -113,6 +115,7 @@
 
         function renderGoal(goal, contributions) {
             activeGoal = goal;
+            activeContributions = contributions;
             const target = Number(goal.target_amount);
             const saved = Number(goal.saved_amount);
             const remaining = Math.max(0, target - saved);
@@ -172,6 +175,10 @@
                 await loadGoal();
             } catch (error) { showMessage(error.message, 'error'); }
             finally { button.disabled = !activeGoal || Number(activeGoal.saved_amount) >= Number(activeGoal.target_amount) || !banks.some(bank => bank.is_active !== false); }
+        });
+
+        window.addEventListener('bankease:ratesupdated', () => {
+            if (activeGoal) renderGoal(activeGoal, activeContributions);
         });
 
         loadGoal().catch(error => showMessage(error.message, 'error'));

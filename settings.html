@@ -371,13 +371,14 @@
                 <div class="settings-row select-row">
                     <div>
                         <div class="settings-label">Currency</div>
-                        <div class="settings-subtext">Display currency for all transactions</div>
+                        <div class="settings-subtext">Uses the latest published rates. Balances and transfers remain in ZAR.</div>
+                        <div class="settings-subtext" id="currencyRateStatus" role="status" aria-live="polite">Loading latest available exchange rates...</div>
                     </div>
-                    <select class="settings-select short" title="Currency" aria-label="Currency">
-                        <option selected>ZAR (R)</option>
-                        <option>USD ($)</option>
-                        <option>EUR (â‚¬)</option>
-                        <option>GBP (Â£)</option>
+                    <select class="settings-select short" title="Currency" aria-label="Currency" data-currency-select>
+                        <option value="ZAR">ZAR</option>
+                        <option value="USD">USD</option>
+                        <option value="EUR">EUR</option>
+                        <option value="GBP">GBP</option>
                     </select>
                 </div>
 
@@ -672,6 +673,7 @@
     </div>
     <script src="i18n.js"></script>
     <script src="theme.js"></script>
+    <script src="currency.js"></script>
     <script src="passkeys.js"></script>
     <script>
         fetch('/api/me').then(response => {

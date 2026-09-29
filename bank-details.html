@@ -114,13 +114,14 @@
     </div>
     <script src="i18n.js"></script>
     <script src="theme.js"></script>
+    <script src="currency.js"></script>
     <script>
         const bankId = new URLSearchParams(window.location.search).get('id');
         const activityList = document.getElementById('accountActivity');
         const accountForm = document.getElementById('accountEditForm');
         const accountMessage = document.getElementById('accountMessage');
         const activityMessage = document.getElementById('activityMessage');
-        const money = value => 'R' + Number(value || 0).toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const money = value => window.BankeaseCurrency.format(Number(value || 0));
         const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
         let activeBank;
         let defaultBankId = null;
@@ -269,6 +270,16 @@
                 if (!response.ok) throw new Error(result.error || 'Could not unlink account.');
                 window.location.href = 'accounts.html';
             } catch (error) { showMessage(error.message, 'error'); button.disabled = false; }
+        });
+
+        window.addEventListener('bankease:ratesupdated', () => {
+            if (!activeBank) return;
+            document.getElementById('accountBalance').textContent = money(activeBank.balance);
+            const warning = document.getElementById('lowBalanceWarning');
+            const threshold = activeBank.low_balance_threshold === null ? null : Number(activeBank.low_balance_threshold);
+            warning.hidden = threshold === null || Number(activeBank.balance) > threshold;
+            warning.textContent = warning.hidden ? '' : `Below your ${money(threshold)} alert threshold`;
+            renderActivity(accountTransactions);
         });
 
         loadAccount().catch(error => showMessage(error.message, 'error'));

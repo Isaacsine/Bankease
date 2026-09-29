@@ -82,6 +82,7 @@
     </div>
     <script src="i18n.js"></script>
     <script src="theme.js"></script>
+    <script src="currency.js"></script>
     <script>
         const transactionList = document.getElementById('transactionList');
         const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
@@ -97,7 +98,7 @@
                 const amount = Number(transaction.amount);
                 return `<div class="transaction-item" data-kind="${kind}">
                     <div><div class="transaction-name">${escapeHtml(transaction.title)}</div><div class="transaction-date">${new Date(transaction.created_at).toLocaleString()}</div>${transaction.memo ? `<div class="transaction-date">${escapeHtml(transaction.memo)}</div>` : ''}</div>
-                    <div class="transaction-amount ${kind}">${amount >= 0 ? '+' : '-'}R${Math.abs(amount).toFixed(2)}</div>
+                    <div class="transaction-amount ${kind}">${amount >= 0 ? '+' : '-'}${window.BankeaseCurrency.format(Math.abs(amount))}</div>
                 </div>`;
             }).join('') : '<p class="transaction-empty">No transactions yet.</p>';
         }
@@ -111,6 +112,7 @@
                 });
             });
         });
+        window.addEventListener('bankease:ratesupdated', () => loadTransactions().catch(() => { window.location.href = 'login.html'; }));
         loadTransactions().catch(() => { window.location.href = 'login.html'; });
         document.querySelectorAll('.nav-item').forEach(button => button.addEventListener('click', () => {
             const routes = { dashboard: 'dashboard.html', accounts: 'accounts.html', settings: 'settings.html' };

@@ -480,6 +480,7 @@
 
     <script src="i18n.js"></script>
     <script src="theme.js"></script>
+    <script src="currency.js"></script>
     <script>
         // Modal toggle functionality
         document.getElementById('addBankModal').addEventListener('click', function (e) {
@@ -500,7 +501,7 @@
             'TymeBank': 'assets/tynebank.png'
         };
 
-        const money = value => 'R' + Number(value || 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        const money = value => window.BankeaseCurrency.format(Number(value || 0));
         const escapeHtml = value => String(value).replace(/[&<>'"]/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character]));
         const bankTransactions = bankId => allTransactions.filter(transaction => transaction.from_bank_id === bankId || transaction.to_bank_id === bankId);
         const isActive = bank => bank.is_active !== false;
@@ -591,7 +592,7 @@
             allBanks = (await banksResponse.json()).banks;
             allTransactions = (await transactionsResponse.json()).transactions;
             const total = allBanks.reduce((sum, bank) => sum + Number(bank.balance), 0);
-            document.getElementById('accountsTotal').textContent = 'R' + total.toFixed(2);
+            document.getElementById('accountsTotal').textContent = money(total);
             document.getElementById('accountsTotalSub').textContent = 'Across ' + allBanks.length + ' accounts';
             document.getElementById('accountsCount').textContent = allBanks.length;
             document.getElementById('accountsLinkedCount').textContent = allBanks.length;
@@ -601,6 +602,14 @@
             renderAccounts();
             renderRecentActivity();
         }
+
+        window.addEventListener('bankease:ratesupdated', () => {
+            if (!allBanks.length) return;
+            const total = allBanks.reduce((sum, bank) => sum + Number(bank.balance), 0);
+            document.getElementById('accountsTotal').textContent = money(total);
+            renderAccounts();
+            renderRecentActivity();
+        });
 
         loadAccounts().catch(() => { window.location.href = 'login.html'; });
     </script>

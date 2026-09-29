@@ -142,7 +142,7 @@
 
     // ---------- HELPERS ----------
     function formatCurrency(amount) {
-        return 'R' + amount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        return window.BankeaseCurrency.format(amount);
     }
 
     function updateTotalBalance() {
@@ -778,6 +778,8 @@
     }
 
     // ---------- EVENT LISTENERS ----------
+    window.addEventListener('bankease:ratesupdated', renderAll);
+
     // Add Bank - show modal
     if (addBankBtn) {
         addBankBtn.addEventListener('click', () => {
