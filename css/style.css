@@ -737,6 +737,10 @@ label {
     font-size: 16px;
 }
 
+[data-passkey-login] {
+    margin-top: 12px;
+}
+
 .auth-footer {
     text-align: center;
     margin-top: 16px;
